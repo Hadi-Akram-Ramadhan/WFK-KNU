@@ -68,6 +68,8 @@ class AIAnalytics extends Component
 
     public function render()
     {
+        // Re-load data on every Livewire poll cycle
+        $this->loadData();
         return view('livewire.ai-analytics');
     }
 }

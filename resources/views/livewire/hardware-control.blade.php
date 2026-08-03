@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6 py-4">
+<div class="flex flex-col gap-6 py-4" wire:poll.3s>
     <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Kontrol Hardware & Aktuator</h1>
         <p class="text-slate-500 text-sm font-normal mt-1">Pengaturan posisi servo pintu air, sirine darurat, dan log kontrol edge</p>

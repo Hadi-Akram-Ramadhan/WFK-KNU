@@ -20,9 +20,6 @@ class DashboardHome extends Component
         $this->loadData();
     }
 
-    /**
-     * Listen for real-time WebSocket updates from Reverb.
-     */
     #[On('echo:sfews,sensor.updated')]
     public function onSensorUpdate(array $data): void
     {
@@ -40,9 +37,9 @@ class DashboardHome extends Component
             $this->recentReadings = $this->node->recentReadings(60)
                 ->get()
                 ->map(fn($r) => [
-                    'time'       => $r->created_at->format('H:i'),
-                    'distance'   => (float) $r->distance_cm,
-                    'status'     => $r->status,
+                    'time'     => $r->created_at->format('H:i'),
+                    'distance' => (float) $r->distance_cm,
+                    'status'   => $r->status,
                 ])
                 ->values()
                 ->toArray();
@@ -51,6 +48,8 @@ class DashboardHome extends Component
 
     public function render()
     {
+        // Re-load newest sensor data on every Livewire poll cycle
+        $this->loadData();
         return view('livewire.dashboard-home');
     }
 }
