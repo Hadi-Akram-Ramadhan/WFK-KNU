@@ -2,20 +2,27 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #include <SoftwareSerial.h>
+#include <DHT.h>
 
 // --- PIN CONFIGURATION ---
-#define TRIG_PIN 2
-#define ECHO_PIN 3
-#define LED_RED 4
-#define LED_YELLOW 5
-#define LED_GREEN 6
-#define BUZZER_PIN 8
-#define SERVO_PIN 9
+#define TRIG_PIN     2
+#define ECHO_PIN     3
+#define LED_RED      4
+#define LED_YELLOW   5
+#define LED_GREEN    6
+#define DHT_PIN      7
+#define BUZZER_PIN   8
+#define SERVO_PIN    9
+#define WEMOS_RX     12  // Connect ke Pin D6 Wemos
+#define WEMOS_TX     13  // Connect ke Pin D5 Wemos
+
+#define DHTTYPE      DHT11
 
 // --- OBJECT INITIALIZATION ---
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo servoGate;
-SoftwareSerial wemosSerial(12, 13); // RX = Pin 12, TX = Pin 13 (ke Wemos)
+SoftwareSerial wemosSerial(WEMOS_RX, WEMOS_TX);
+DHT dht(DHT_PIN, DHTTYPE);
 
 // Melodi Kuning: High-Pitch Arpeggio
 int yellowMelody[] = {1047, 1319, 1568, 2093, 1568, 1319}; 
@@ -24,6 +31,7 @@ int noteDurations[] = {80, 80, 80, 150, 80, 80};
 void setup() {
   Serial.begin(9600);
   wemosSerial.begin(9600);
+  dht.begin();
 
   // Pin Modes
   pinMode(TRIG_PIN, OUTPUT);
@@ -57,36 +65,45 @@ void loop() {
   digitalWrite(TRIG_PIN, LOW);
 
   long duration = pulseIn(ECHO_PIN, HIGH);
-  float distance = duration * 0.034 / 2;
+  float distance = duration * 0.034 / 2.0;
+
+  // 2. BACA SENSOR DHT11
+  float temp = dht.readTemperature();
 
   // Kirim data jarak ke Wemos D1 Mini via Serial
   wemosSerial.println(distance);
 
-  // 2. DISPLAY LCD & AKTUATOR
+  // 3. TAMPILAN LCD BARIS 1 (Jarak & Suhu)
   lcd.setCursor(0, 0);
-  lcd.print("Jarak: ");
+  lcd.print("D:");
   lcd.print(distance, 1);
-  lcd.print(" cm   ");
+  lcd.print("cm ");
+  
+  if (!isnan(temp)) {
+    lcd.print("T:");
+    lcd.print((int)temp);
+    lcd.print("C   ");
+  } else {
+    lcd.print("T:--C ");
+  }
 
+  // 4. AKTUATOR & LOGIKA BARIS 2 LCD
   lcd.setCursor(0, 1);
 
   if (distance < 10.0) { // DANGER MODE (< 10cm)
-    lcd.print("Status: DANGER  ");
+    lcd.print("STATUS: DANGER! ");
     
     digitalWrite(LED_YELLOW, LOW);
     digitalWrite(LED_GREEN, LOW);
     servoGate.write(90);     // Pintu air jebol buka 90 derajat
 
-    // --- SIRINE HOROR / NUCLEAR AIR-RAID ALARM ---
-    
-    // Phase 1: High Strobe Screech (Bikin Telinga Pekak) + LED Red ON
+    // KEDIP KENCANG + SIRINE HOROR / NUCLEAR AIR-RAID ALARM
     digitalWrite(LED_RED, HIGH);
     for (int i = 0; i < 4; i++) {
-      tone(BUZZER_PIN, 3800); delay(25); // Frekuensi super tinggi
+      tone(BUZZER_PIN, 3800); delay(25);
       tone(BUZZER_PIN, 2400); delay(25);
     }
     
-    // Phase 2: Chaotic Pitch Drop (Meluncur Horor) + LED Red OFF
     digitalWrite(LED_RED, LOW);
     for (int hz = 3600; hz >= 800; hz -= 120) {
       tone(BUZZER_PIN, hz);
@@ -94,7 +111,7 @@ void loop() {
     }
 
   } else if (distance >= 10.0 && distance <= 20.0) { // CAUTION MODE (10cm - 20cm)
-    lcd.print("Status: CAUTION ");
+    lcd.print("STATUS: CAUTION ");
     
     digitalWrite(LED_RED, LOW);
     digitalWrite(LED_GREEN, LOW);
@@ -109,10 +126,10 @@ void loop() {
     noTone(BUZZER_PIN);
 
     digitalWrite(LED_YELLOW, LOW);
-    delay(400); // Jeda mati 0.4 detik
+    delay(400); // Jeda mati 0.4 detik (efek kedip pelan)
 
   } else { // SAFE MODE (> 20cm)
-    lcd.print("Status: SAFE    ");
+    lcd.print("STATUS: SAFE    ");
     
     digitalWrite(LED_RED, LOW);
     digitalWrite(LED_YELLOW, LOW);
