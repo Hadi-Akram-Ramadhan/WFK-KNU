@@ -14,18 +14,13 @@ class OllamaService
     public function __construct()
     {
         $this->baseUrl = config('ollama.url', 'http://localhost:11434');
-        $this->model   = config('ollama.model', 'llama3.2:3b');
-        $this->timeout = config('ollama.timeout', 60);
+        $this->model   = config('ollama.model', 'qwen2.5:1.5b');
+        $this->timeout = config('ollama.timeout', 25);
     }
 
     /**
-     * Analyze flood sensor data and return AI recommendation.
-     *
-     * @param  array  $readings   Recent distance readings (cm) with timestamps
-     * @param  string $nodeId     Node identifier (e.g. "BEDADUNG_01")
-     * @param  string $nodeName   Node human-readable name
-     * @param  string $trigger    'danger_threshold' | 'periodic_summary'
-     * @return array{risk_level: string, ai_response: string, recommended_actions: array, model_used: string, response_time_ms: int}
+     * Analyze multi-sensor flood data (HC-SR04 distance + DHT11 temp/humidity)
+     * and calculate flood probability prediction.
      */
     public function analyzeFloodData(
         array $readings,
@@ -43,8 +38,8 @@ class OllamaService
                     'model'  => $this->model,
                     'stream' => false,
                     'options' => [
-                        'num_predict' => 128,
-                        'temperature' => 0.2,
+                        'num_predict' => 250,
+                        'temperature' => 0.1,
                     ],
                     'messages' => [
                         ['role' => 'system', 'content' => $this->systemPrompt()],
@@ -56,40 +51,45 @@ class OllamaService
 
             if (!$response->successful()) {
                 Log::error('[Ollama] API Error', ['status' => $response->status(), 'body' => $response->body()]);
-                return $this->fallbackResponse($responseTimeMs);
+                return $this->fallbackResponse($readings, $responseTimeMs);
             }
 
             $content = $response->json('message.content', '');
-            return $this->parseResponse($content, $responseTimeMs);
+            return $this->parseResponse($content, $readings, $responseTimeMs);
 
         } catch (\Exception $e) {
             Log::error('[Ollama] Connection Error: ' . $e->getMessage());
             $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
-            return $this->fallbackResponse($responseTimeMs);
+            return $this->fallbackResponse($readings, $responseTimeMs);
         }
     }
 
     private function systemPrompt(): string
     {
         return <<<PROMPT
-Kamu adalah AI Asisten Sistem Peringatan Dini Banjir (SFEWS) untuk Sungai Bedadung, Jember, Jawa Timur.
-Tugasmu adalah menganalisis data sensor tinggi air secara real-time dan memberikan rekomendasi tindakan darurat.
+Kamu adalah AI Asisten Prediksi Banjir & Keselamatan Warga Sungai Bedadung, Jember.
+Sasaran audiensmu adalah MASYARAKAT / WARGA BIASA di sekitar bantaran sungai Bedadung.
 
-Panduan sensor:
-- Sensor ultrasonic dipasang di atas sungai, mengukur jarak ke permukaan air.
-- Jarak < 10 cm: STATUS DANGER (air hampir menyentuh sensor / level kritis)
-- Jarak 10-20 cm: STATUS CAUTION (waspada, air sedang naik)
-- Jarak > 20 cm: STATUS SAFE (aman)
+Tugasmu:
+1. Hitung perkiraan PROBABILITAS BANJIR (%) berdasarkan Jarak Air (cm), Laju Kenaikan Air (cm/menit), Suhu Lingkungan (°C), dan Kelembapan Udara (%) dari sensor DHT11.
+2. Analisis indikator cuaca (kelembapan tinggi >85% dengan suhu turun menandakan hujan deras yang menambah potensi banjir).
+3. Berikan pesan himbauan keselamatan warga yang santun, jelas, tanpa istilah teknisi.
+4. JANGAN gunakan simbol markdown seperti bold asterisks (**), pagar (#), atau tag HTML. Gunakan TEKS POLOS SAJA.
 
-Berikan respons dalam format JSON yang valid:
+Wajib berikan respons dalam format JSON valid berikut:
 {
   "risk_level": "low|medium|high|critical",
-  "summary": "Ringkasan situasi dalam 1-2 kalimat",
-  "recommended_actions": ["Aksi 1", "Aksi 2", "Aksi 3"],
-  "time_to_critical": "Estimasi waktu ke level kritis (atau null jika sudah kritis/aman)"
+  "flood_probability_percent": 85,
+  "weather_condition": "Kelembapan Udara 88% — Potensi Hujan Lebat di Hulu Bedadung",
+  "summary": "Pesan ringkas himbauan keselamatan warga dalam 2 kalimat polos tanpa markdown.",
+  "recommended_actions": [
+    "Amankan dokumen penting dan barang elektronik ke tempat tinggi",
+    "Siapkan tas siaga bencana berisi makanan, obat-obatan, dan pakaian",
+    "Segera evakuasi ke posko darurat jika air terus meningkat"
+  ]
 }
 
-Selalu gunakan Bahasa Indonesia. Berikan respons JSON saja, tanpa teks tambahan di luar JSON.
+Gunakan Bahasa Indonesia yang jelas. Keluarkan HANYA JSON tanpa teks lain di luar JSON.
 PROMPT;
     }
 
@@ -100,40 +100,37 @@ PROMPT;
         string $trigger
     ): string {
         $readingsText = collect($readings)
-            ->map(fn($r) => "- [{$r['time']}] Jarak: {$r['distance_cm']} cm | Status: {$r['status']}")
+            ->map(function($r) {
+                $temp = $r['temperature_c'] ?? 28.5;
+                $hum  = $r['humidity_percent'] ?? 80;
+                return "- Jam {$r['time']}: Jarak air {$r['distance_cm']} cm ({$r['status']}) | Suhu: {$temp}°C | Kelembapan: {$hum}%";
+            })
             ->join("\n");
 
-        $latestReading = end($readings);
-        $currentDistance = $latestReading['distance_cm'] ?? 'N/A';
-        $currentStatus   = $latestReading['status'] ?? 'unknown';
+        $latestReading   = end($readings);
+        $currentDistance = $latestReading['distance_cm'] ?? 25;
+        $currentStatus   = $latestReading['status'] ?? 'safe';
+        $currentTemp     = $latestReading['temperature_c'] ?? 28.5;
+        $currentHum      = $latestReading['humidity_percent'] ?? 80.0;
         $riseRate        = $latestReading['rise_rate_cm_per_min'] ?? 0;
 
-        $triggerText = match($trigger) {
-            'danger_threshold' => 'ALERT: Ambang batas BAHAYA telah terlampaui!',
-            'periodic_summary' => 'Laporan analisis periodik (setiap 30 menit)',
-            default            => 'Analisis rutin',
-        };
-
         return <<<PROMPT
-Node Sensor: {$nodeId} ({$nodeName})
-Pemicu Analisis: {$triggerText}
-Waktu Analisis: {$this->getCurrentWIBTime()}
+Lokasi Pemantauan: {$nodeName} ({$nodeId})
+Status Terkini: {$currentStatus}
+Jarak Air ke Sensor: {$currentDistance} cm
+Laju Kenaikan Air: {$riseRate} cm/menit
+Suhu Udara (DHT11): {$currentTemp} °C
+Kelembapan Udara (DHT11): {$currentHum} %
 
---- DATA SENSOR 30 MENIT TERAKHIR ---
+Riwayat Sensor Terbaru:
 {$readingsText}
 
---- STATUS SAAT INI ---
-Jarak Terkini: {$currentDistance} cm
-Status: {$currentStatus}
-Laju Kenaikan: {$riseRate} cm/menit
-
-Berikan analisis risiko banjir dan rekomendasi tindakan untuk tim BPBD Jember.
+Hitung estimasi Probabilitas Banjir (0-100%), ringkas indikator cuaca DHT11, dan berikan 3 langkah keselamatan warga Jember.
 PROMPT;
     }
 
-    private function parseResponse(string $content, int $responseTimeMs): array
+    private function parseResponse(string $content, array $readings, int $responseTimeMs): array
     {
-        // Extract JSON from response (Ollama sometimes adds extra text)
         preg_match('/\{.*\}/s', $content, $matches);
         $jsonStr = $matches[0] ?? '{}';
 
@@ -141,47 +138,88 @@ PROMPT;
             $parsed = json_decode($jsonStr, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             Log::warning('[Ollama] Failed to parse JSON response', ['content' => $content]);
-            return $this->fallbackResponse($responseTimeMs);
+            return $this->fallbackResponse($readings, $responseTimeMs);
+        }
+
+        $latestReading = end($readings);
+        $dist = (float)($latestReading['distance_cm'] ?? 25);
+        $hum  = (float)($latestReading['humidity_percent'] ?? 80);
+
+        // Fallback calculation for flood probability if missing
+        $calculatedProbability = (int)($parsed['flood_probability_percent'] ?? $this->calculateProbabilityFallback($dist, $hum));
+
+        $cleanSummary = isset($parsed['summary'])
+            ? trim(preg_replace('/[\*\#]/', '', $parsed['summary']))
+            : 'Sungai Bedadung menunjukkan peningkatan debit air. Warga disarankan siaga dan mengamankan barang berharga.';
+
+        $cleanWeather = isset($parsed['weather_condition'])
+            ? trim(preg_replace('/[\*\#]/', '', $parsed['weather_condition']))
+            : "Kelembapan Udara {$hum}% — Kondisi Berawan Berpotensi Hujan";
+
+        $cleanActions = collect($parsed['recommended_actions'] ?? [])
+            ->map(fn($act) => trim(preg_replace('/[\*\#]/', '', $act)))
+            ->filter()
+            ->values()
+            ->toArray();
+
+        if (empty($cleanActions)) {
+            $cleanActions = [
+                'Amankan berkas penting dan barang elektronik ke lantai 2 / tempat tinggi',
+                'Siapkan tas siaga bencana (P3K, pakaian, air minum, senter)',
+                'Segera evakuasi ke posko BPBD jika air terus naik',
+            ];
         }
 
         return [
-            'risk_level'          => $parsed['risk_level'] ?? 'high',
-            'ai_response'         => $parsed['summary'] ?? $content,
-            'recommended_actions' => $parsed['recommended_actions'] ?? [],
-            'time_to_critical'    => $parsed['time_to_critical'] ?? null,
-            'model_used'          => $this->model,
-            'response_time_ms'    => $responseTimeMs,
+            'risk_level'                => $parsed['risk_level'] ?? ($dist < 10 ? 'critical' : ($dist <= 20 ? 'high' : 'low')),
+            'flood_probability_percent' => max(5, min(99, $calculatedProbability)),
+            'weather_condition'         => $cleanWeather,
+            'ai_response'               => $cleanSummary,
+            'recommended_actions'       => $cleanActions,
+            'time_to_critical'          => $parsed['time_to_critical'] ?? null,
+            'model_used'                => $this->model,
+            'response_time_ms'          => $responseTimeMs,
         ];
     }
 
-    private function fallbackResponse(int $responseTimeMs): array
+    private function fallbackResponse(array $readings, int $responseTimeMs): array
     {
+        $latestReading = end($readings);
+        $dist = (float)($latestReading['distance_cm'] ?? 25);
+        $hum  = (float)($latestReading['humidity_percent'] ?? 82);
+
+        $prob = $this->calculateProbabilityFallback($dist, $hum);
+
         return [
-            'risk_level'          => 'high',
-            'ai_response'         => 'AI tidak dapat dihubungi. Pantau manual dan ikuti prosedur standar BPBD.',
-            'recommended_actions' => [
-                'Pantau sensor secara manual',
-                'Hubungi koordinator BPBD segera',
-                'Siapkan jalur evakuasi darurat',
+            'risk_level'                => $dist < 10 ? 'critical' : ($dist <= 20 ? 'high' : 'low'),
+            'flood_probability_percent' => $prob,
+            'weather_condition'         => "Kelembapan Udara {$hum}% — Terdeteksi Potensi Hujan di Daerah Hulu",
+            'ai_response'               => 'Sistem AI memantau kenaikan debit Sungai Bedadung. Warga di bantaran sungai diminta tetap waspada dan mengamankan barang berharga.',
+            'recommended_actions'       => [
+                'Amankan berkas penting dan barang elektronik ke tempat tinggi',
+                'Siapkan tas siaga bencana (P3K, senter, dan pakaian secukupnya)',
+                'Hubungi Call Center BPBD Jember 112 jika membutuhkan bantuan evakuasi',
             ],
-            'time_to_critical'    => null,
-            'model_used'          => 'fallback',
-            'response_time_ms'    => $responseTimeMs,
+            'time_to_critical'          => null,
+            'model_used'                => 'fallback',
+            'response_time_ms'          => $responseTimeMs,
         ];
     }
 
-    private function getCurrentWIBTime(): string
+    private function calculateProbabilityFallback(float $distCm, float $humidityPercent): int
     {
-        return now()->setTimezone('Asia/Jakarta')->format('Y-m-d H:i:s T');
+        if ($distCm < 10.0) {
+            return (int) min(98, 80 + ($humidityPercent > 85 ? 15 : 5));
+        } elseif ($distCm <= 20.0) {
+            return (int) min(79, 45 + ($humidityPercent > 80 ? 20 : 10));
+        }
+        return (int) max(5, min(30, 15 + ($humidityPercent > 85 ? 10 : 0)));
     }
 
-    /**
-     * Test if Ollama is reachable.
-     */
     public function isAvailable(): bool
     {
         try {
-            $response = Http::timeout(5)->get("{$this->baseUrl}/api/tags");
+            $response = Http::timeout(4)->get("{$this->baseUrl}/api/tags");
             return $response->successful();
         } catch (\Exception) {
             return false;

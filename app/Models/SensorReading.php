@@ -13,6 +13,8 @@ class SensorReading extends Model
     protected $fillable = [
         'sensor_node_id',
         'distance_cm',
+        'temperature_c',
+        'humidity_percent',
         'water_level_m',
         'status',
         'rise_rate_cm_per_min',
@@ -20,10 +22,12 @@ class SensorReading extends Model
     ];
 
     protected $casts = [
-        'distance_cm'        => 'decimal:2',
-        'water_level_m'      => 'decimal:3',
+        'distance_cm'          => 'decimal:2',
+        'temperature_c'        => 'decimal:2',
+        'humidity_percent'     => 'decimal:2',
+        'water_level_m'        => 'decimal:3',
         'rise_rate_cm_per_min' => 'decimal:4',
-        'capacity_percent'   => 'decimal:2',
+        'capacity_percent'     => 'decimal:2',
     ];
 
     public function node(): BelongsTo

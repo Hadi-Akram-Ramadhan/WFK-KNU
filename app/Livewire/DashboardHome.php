@@ -6,7 +6,6 @@ use App\Models\SensorNode;
 use App\Models\SensorReading;
 use App\Models\AIAnalysis;
 use Livewire\Component;
-use Livewire\Attributes\On;
 
 class DashboardHome extends Component
 {
@@ -16,12 +15,6 @@ class DashboardHome extends Component
     public array $recentReadings = [];
 
     public function mount(): void
-    {
-        $this->loadData();
-    }
-
-    #[On('echo:sfews,sensor.updated')]
-    public function onSensorUpdate(array $data): void
     {
         $this->loadData();
     }
@@ -48,7 +41,6 @@ class DashboardHome extends Component
 
     public function render()
     {
-        // Re-load newest sensor data on every Livewire poll cycle
         $this->loadData();
         return view('livewire.dashboard-home');
     }

@@ -85,13 +85,19 @@ class SimulateSensorData extends Command
             default => '<fg=green>✅ SAFE</>',
         };
 
-        $this->line("SENDING: Distance = {$distance} cm [{$statusLabel}]");
+        $temp = round(27.5 + (rand(-10, 10) / 10), 1);
+        $hum  = round($distance < 10 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 20 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
+
+        $this->line("SENDING: Distance = {$distance} cm | Suhu = {$temp}°C | Kelembapan = {$hum}% [{$statusLabel}]");
 
         try {
             $response = Http::withToken($token)
+                ->timeout(10)
                 ->post("{$baseUrl}/api/sensor/data", [
-                    'node_id'  => 'BEDADUNG_01',
-                    'distance' => $distance,
+                    'node_id'     => 'BEDADUNG_01',
+                    'distance'    => $distance,
+                    'temperature' => $temp,
+                    'humidity'    => $hum,
                 ]);
 
             if ($response->successful()) {

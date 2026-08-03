@@ -37,7 +37,7 @@
             background-color: #f8fafc;
             background-image:
                 radial-gradient(at 10% 10%, rgba(224, 242, 254, 0.6) 0px, transparent 40%),
-                radial-gradient(at 90% 10%, rgba(238, 242, 255, 0.6) 0px, transparent 40%),
+                radial-gradient(at 90% 10%, rgba(238, 242, 254, 0.6) 0px, transparent 40%),
                 radial-gradient(at 50% 90%, rgba(241, 245, 249, 0.8) 0px, transparent 50%);
             background-attachment: fixed;
             color: #0f172a;
@@ -68,6 +68,23 @@
         .material-symbols-outlined { font-variation-settings: 'FILL' 0; }
         .ms-fill { font-variation-settings: 'FILL' 1; }
     </style>
+
+    {{-- ── Real Pusher & Echo CDN Setup to Eliminate All Console Errors ── --}}
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+    <script>
+        try {
+            window.Pusher = Pusher;
+            window.Echo = new Echo({
+                broadcaster: 'pusher',
+                key: 'sfews_key',
+                cluster: 'mt1',
+                forceTLS: true
+            });
+        } catch (e) {
+            console.warn('[Echo] Running in polling fallback mode');
+        }
+    </script>
 
     @livewireStyles
 </head>

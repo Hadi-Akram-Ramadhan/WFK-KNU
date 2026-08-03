@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6 py-4" wire:poll.2s>
+<div class="flex flex-col gap-6 py-4" wire:poll.3s>
 
     @php
         $status = $latestReading?->status ?? 'safe';
@@ -30,12 +30,20 @@
             'caution' => 'bg-amber-500',
             default   => 'bg-emerald-600',
         };
+
+        $citizenActions = !empty($latestAnalysis?->recommended_actions) 
+            ? $latestAnalysis->recommended_actions 
+            : [
+                'Amankan dokumen penting dan barang elektronik ke lantai 2 / tempat tinggi',
+                'Siapkan tas siaga bencana (P3K, pakaian, air minum, senter)',
+                'Segera evakuasi ke posko BPBD jika air terus naik'
+            ];
     @endphp
 
     {{-- ── PUBLIC BENTO GRID LAYOUT ── --}}
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5">
 
-        {{-- ── Bento Item 1: Status Utama untuk Warga (Spans 2 cols on md/lg) ── --}}
+        {{-- ── Bento Item 1: Status Utama untuk Warga ── --}}
         <div class="clean-card p-6 md:col-span-2 lg:col-span-2 flex flex-col justify-between relative overflow-hidden group">
             <div class="flex items-center justify-between mb-3">
                 <span class="px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-2 {{ $badgeStyle }}">
@@ -71,7 +79,7 @@
             </div>
         </div>
 
-        {{-- ── Bento Item 2: Himbauan & Panduan AI untuk Warga (Spans 2 cols on lg) ── --}}
+        {{-- ── Bento Item 2: Himbauan & Panduan AI untuk Warga ── --}}
         <div class="clean-card p-6 lg:col-span-2 flex flex-col justify-between">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2.5">
@@ -85,19 +93,17 @@
                 </span>
             </div>
 
-            @if($latestAnalysis)
             <div class="my-2 space-y-3">
                 <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
                     <p class="text-xs font-normal text-slate-700 leading-relaxed">
-                        "{{ $latestAnalysis->ai_response }}"
+                        "{{ trim(preg_replace('/[\*\#]/', '', $latestAnalysis?->ai_response ?? 'Air Sungai Bedadung berada dalam batas pemantauan. Warga disarankan siaga dan tetap mengikuti petunjuk resmi BPBD Jember.')) }}"
                     </p>
                 </div>
 
-                @if($latestAnalysis->recommended_actions)
                 <div>
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Langkah Penting Warga:</span>
                     <div class="space-y-1.5">
-                        @foreach(array_slice($latestAnalysis->recommended_actions, 0, 3) as $act)
+                        @foreach(array_slice($citizenActions, 0, 3) as $act)
                         <div class="flex items-center gap-2 text-xs font-medium text-slate-700">
                             <span class="material-symbols-outlined text-[15px] text-emerald-600">task_alt</span>
                             <span>{{ $act }}</span>
@@ -105,14 +111,7 @@
                         @endforeach
                     </div>
                 </div>
-                @endif
             </div>
-            @else
-            <div class="py-6 text-center">
-                <span class="material-symbols-outlined text-3xl text-slate-300 mb-1">nature_people</span>
-                <p class="text-xs font-medium text-slate-500">Sistem AI memantau kondisi air sungai secara otomatis untuk keselamatan warga.</p>
-            </div>
-            @endif
 
             <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
                 <span class="font-mono text-[11px] text-slate-400">Pembaruan: {{ now()->format('H:i:s') }} WIB</span>
@@ -143,7 +142,7 @@
                     </span>
                 </div>
             </div>
-            <span class="text-[10px] font-mono text-slate-400 mt-4 block text-center">Otorefresh setiap 2 detik</span>
+            <span class="text-[10px] font-mono text-slate-400 mt-4 block text-center">Otorefresh setiap 3 detik</span>
         </div>
 
         {{-- ── Bento Item 4: Kontak Darurat & Posko Evakuasi Warga ── --}}

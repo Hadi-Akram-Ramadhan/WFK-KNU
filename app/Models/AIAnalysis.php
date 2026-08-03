@@ -19,13 +19,16 @@ class AIAnalysis extends Model
         'prompt_sent',
         'ai_response',
         'risk_level',
+        'flood_probability_percent',
+        'weather_condition',
         'recommended_actions',
         'model_used',
         'response_time_ms',
     ];
 
     protected $casts = [
-        'recommended_actions' => 'array',
+        'recommended_actions'       => 'array',
+        'flood_probability_percent' => 'integer',
     ];
 
     public function node(): BelongsTo

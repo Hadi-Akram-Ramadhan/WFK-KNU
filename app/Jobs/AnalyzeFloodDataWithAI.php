@@ -74,15 +74,17 @@ class AnalyzeFloodDataWithAI implements ShouldQueue
 
         // Store analysis in DB
         $analysis = AIAnalysis::create([
-            'sensor_node_id'    => $node->id,
-            'sensor_reading_id' => $this->reading->id,
-            'trigger'           => $this->trigger,
-            'prompt_sent'       => "Context: {$node->node_id} | Readings: " . count($recentReadings),
-            'ai_response'       => $result['ai_response'],
-            'risk_level'        => $result['risk_level'],
-            'recommended_actions' => $result['recommended_actions'],
-            'model_used'        => $result['model_used'],
-            'response_time_ms'  => $result['response_time_ms'],
+            'sensor_node_id'            => $node->id,
+            'sensor_reading_id'         => $this->reading->id,
+            'trigger'                   => $this->trigger,
+            'prompt_sent'               => "Context: {$node->node_id} | Readings: " . count($recentReadings),
+            'ai_response'               => $result['ai_response'],
+            'risk_level'                => $result['risk_level'],
+            'flood_probability_percent' => $result['flood_probability_percent'] ?? 15,
+            'weather_condition'         => $result['weather_condition'] ?? null,
+            'recommended_actions'       => $result['recommended_actions'],
+            'model_used'                => $result['model_used'],
+            'response_time_ms'          => $result['response_time_ms'],
         ]);
 
         Log::info("[AIJob] Analysis stored #{$analysis->id}, risk: {$result['risk_level']}, time: {$result['response_time_ms']}ms");

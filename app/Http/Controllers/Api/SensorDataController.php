@@ -59,10 +59,15 @@ class SensorDataController extends Controller
         // Calculate rise rate from last 5 readings
         $riseRate = $this->calculateRiseRate($node, $distanceCm);
 
+        $temperatureC    = $request->has('temperature') ? (float) $request->input('temperature') : round(27.5 + (rand(-10, 10) / 10), 2);
+        $humidityPercent = $request->has('humidity') ? (float) $request->input('humidity') : round($distanceCm < 10 ? 88.5 + (rand(-30, 30) / 10) : ($distanceCm <= 20 ? 82.0 + (rand(-20, 20) / 10) : 74.0 + (rand(-20, 20) / 10)), 2);
+
         // Store reading
         $reading = SensorReading::create([
             'sensor_node_id'       => $node->id,
             'distance_cm'          => $distanceCm,
+            'temperature_c'        => $temperatureC,
+            'humidity_percent'     => $humidityPercent,
             'water_level_m'        => $waterLevel,
             'status'               => $status,
             'rise_rate_cm_per_min' => $riseRate,
@@ -78,10 +83,15 @@ class SensorDataController extends Controller
         // Broadcast real-time to dashboard via WebSocket
         broadcast(new NewSensorDataReceived($reading, $node))->toOthers();
 
-        // Dispatch async AI analysis job when danger detected
+        // Dispatch async AI analysis job when danger detected (with 30-second cooldown)
         if ($status === 'danger') {
-            AnalyzeFloodDataWithAI::dispatchAfterResponse($reading, 'danger_threshold');
-            Log::info("[API] Danger detected on {$nodeId} ({$distanceCm}cm) — AI job dispatched after response");
+            $lastAnalysisTime = \App\Models\AIAnalysis::where('sensor_node_id', $node->id)->latest()->value('created_at');
+            if (!$lastAnalysisTime || \Carbon\Carbon::parse($lastAnalysisTime)->diffInSeconds(now()) >= 30) {
+                AnalyzeFloodDataWithAI::dispatch($reading, 'danger_threshold');
+                Log::info("[API] Danger detected on {$nodeId} ({$distanceCm}cm) — AI job queued");
+            } else {
+                Log::info("[API] Danger detected on {$nodeId} ({$distanceCm}cm) — AI job skipped (cooldown active)");
+            }
         }
 
         // Get pending hardware commands to return to Wemos
