@@ -80,8 +80,8 @@ class SensorDataController extends Controller
 
         // Dispatch async AI analysis job when danger detected
         if ($status === 'danger') {
-            AnalyzeFloodDataWithAI::dispatch($reading, 'danger_threshold');
-            Log::info("[API] Danger detected on {$nodeId} ({$distanceCm}cm) — AI job dispatched");
+            AnalyzeFloodDataWithAI::dispatchAfterResponse($reading, 'danger_threshold');
+            Log::info("[API] Danger detected on {$nodeId} ({$distanceCm}cm) — AI job dispatched after response");
         }
 
         // Get pending hardware commands to return to Wemos

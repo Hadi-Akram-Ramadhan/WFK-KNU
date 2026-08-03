@@ -42,6 +42,10 @@ class OllamaService
                 ->post("{$this->baseUrl}/api/chat", [
                     'model'  => $this->model,
                     'stream' => false,
+                    'options' => [
+                        'num_predict' => 128,
+                        'temperature' => 0.2,
+                    ],
                     'messages' => [
                         ['role' => 'system', 'content' => $this->systemPrompt()],
                         ['role' => 'user',   'content' => $prompt],
