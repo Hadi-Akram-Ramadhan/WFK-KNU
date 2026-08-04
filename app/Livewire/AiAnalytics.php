@@ -13,15 +13,16 @@ class AiAnalytics extends Component
 {
     public ?SensorNode $node = null;
     public ?AIAnalysis $latestAnalysis = null;
+    public bool $hasData = false;
 
-    public string $currentStatus = 'safe';
-    public float $currentDistance = 25.0;
-    public float $currentTemp = 33.3;
-    public float $currentHumidity = 57.0;
-    public string $rainStatus = 'CLEAR';
-    public float $waterLevelCm = 186.5;
-    public int $floodProbability = 15;
-    public string $weatherCondition = 'Partly Cloudy';
+    public string $currentStatus = 'no_data';
+    public float $currentDistance = 0.0;
+    public ?float $currentTemp = null;
+    public ?float $currentHumidity = null;
+    public string $rainStatus = 'NO DATA';
+    public ?float $waterLevelCm = null;
+    public int $floodProbability = 0;
+    public string $weatherCondition = 'Awaiting live sensor data stream';
     public array $automatedActions = [];
 
     public array $recent10Readings = [];
@@ -52,32 +53,43 @@ class AiAnalytics extends Component
             ->first();
 
         $latest = $this->node->latestReading;
+
         if ($latest) {
+            $this->hasData         = true;
             $this->currentStatus   = $latest->status;
             $this->currentDistance = (float) $latest->distance_cm;
-            $this->currentTemp     = (float) ($latest->temperature_c ?? 33.3);
-            $this->currentHumidity = (float) ($latest->humidity_percent ?? 57.0);
+            $this->currentTemp     = (float) ($latest->temperature_c ?? 0);
+            $this->currentHumidity = (float) ($latest->humidity_percent ?? 0);
             $this->rainStatus      = $this->currentHumidity > 85 ? 'RAINY' : 'CLEAR';
             $this->waterLevelCm    = round(200 - $this->currentDistance, 1);
-        }
 
-        // Determine AI Flood Probability
-        if ($this->latestAnalysis?->flood_probability_percent) {
-            $this->floodProbability = $this->latestAnalysis->flood_probability_percent;
-        } else {
-            $this->floodProbability = match($this->currentStatus) {
-                'danger'  => min(98, 80 + ($this->currentHumidity > 85 ? 15 : 5)),
-                'caution' => min(79, 45 + ($this->currentHumidity > 80 ? 20 : 10)),
-                default   => max(5, min(30, 15 + ($this->currentHumidity > 85 ? 10 : 0))),
-            };
-        }
+            // Determine AI Flood Probability
+            if ($this->latestAnalysis?->flood_probability_percent) {
+                $this->floodProbability = $this->latestAnalysis->flood_probability_percent;
+            } else {
+                $this->floodProbability = match($this->currentStatus) {
+                    'danger'  => min(98, 80 + ($this->currentHumidity > 85 ? 15 : 5)),
+                    'caution' => min(79, 45 + ($this->currentHumidity > 80 ? 20 : 10)),
+                    default   => max(5, min(30, 15 + ($this->currentHumidity > 85 ? 10 : 0))),
+                };
+            }
 
-        // Weather condition label in English
-        if ($this->latestAnalysis?->weather_condition) {
-            $this->weatherCondition = $this->latestAnalysis->weather_condition;
+            // Weather condition label in English
+            if ($this->latestAnalysis?->weather_condition) {
+                $this->weatherCondition = $this->latestAnalysis->weather_condition;
+            } else {
+                $this->weatherCondition = "Humidity {$this->currentHumidity}% — " .
+                    ($this->currentHumidity > 85 ? 'Potential Heavy Rainfall Upstream' : 'Partly Cloudy Weather');
+            }
         } else {
-            $this->weatherCondition = "Humidity {$this->currentHumidity}% — " .
-                ($this->currentHumidity > 85 ? 'Potential Heavy Rainfall Upstream' : 'Partly Cloudy Weather');
+            $this->hasData          = false;
+            $this->currentStatus    = 'no_data';
+            $this->waterLevelCm     = null;
+            $this->currentTemp      = null;
+            $this->currentHumidity  = null;
+            $this->rainStatus       = 'NO DATA';
+            $this->floodProbability = 0;
+            $this->weatherCondition = 'Awaiting live sensor data stream';
         }
 
         // Citizen actions from AI analysis or dynamic fallback based on status (English)
@@ -118,8 +130,8 @@ class AiAnalytics extends Component
                 'time'        => $r->created_at->format('H:i'),
                 'water_level' => round(200 - (float) $r->distance_cm, 1),
                 'distance'    => (float) $r->distance_cm,
-                'temp'        => (float) ($r->temperature_c ?? 33.3),
-                'humidity'    => (float) ($r->humidity_percent ?? 57.0),
+                'temp'        => (float) ($r->temperature_c ?? 0),
+                'humidity'    => (float) ($r->humidity_percent ?? 0),
                 'status'      => $r->status,
             ])
             ->values()
@@ -150,8 +162,8 @@ class AiAnalytics extends Component
                 'time'        => $r->created_at->format('H:i:s'),
                 'water_level' => round(200 - (float) $r->distance_cm, 1),
                 'distance'    => (float) $r->distance_cm,
-                'temp'        => (float) ($r->temperature_c ?? 33.3),
-                'humidity'    => (float) ($r->humidity_percent ?? 57.0),
+                'temp'        => (float) ($r->temperature_c ?? 0),
+                'humidity'    => (float) ($r->humidity_percent ?? 0),
                 'status'      => $r->status,
             ])
             ->toArray();

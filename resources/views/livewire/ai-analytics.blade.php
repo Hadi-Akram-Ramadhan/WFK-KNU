@@ -1,38 +1,39 @@
 <div class="flex flex-col gap-6" wire:poll.3s>
 
     @php
-        $status = $currentStatus ?? 'safe';
-        $distanceCm = (float)($currentDistance ?? 25.0);
-        $tempC = (float)($currentTemp ?? 33.3);
-        $humidityRH = (float)($currentHumidity ?? 57.0);
-
-        $waterLevelCm = round(200 - $distanceCm, 1);
+        $hasReading = $hasData ?? false;
+        $status = $currentStatus ?? 'no_data';
 
         $statusTitle = match($status) {
             'danger'  => 'DANGER',
             'caution' => 'STANDBY',
-            default   => 'SAFE',
+            'safe'    => 'SAFE',
+            default   => 'NO DATA',
         };
 
         $statusPillStyle = match($status) {
             'danger'  => 'bg-rose-100 text-rose-700 border-rose-200',
             'caution' => 'bg-amber-100 text-amber-700 border-amber-200',
-            default   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+            'safe'    => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+            default   => 'bg-slate-100 text-slate-500 border-slate-200',
         };
 
         $probColor = match(true) {
+            !$hasReading            => 'text-slate-500 border-slate-200 bg-slate-50',
             $floodProbability >= 75 => 'text-rose-600 border-rose-200 bg-rose-50',
             $floodProbability >= 40 => 'text-amber-600 border-amber-200 bg-amber-50',
             default                 => 'text-emerald-600 border-emerald-200 bg-emerald-50',
         };
 
         $probBarColor = match(true) {
+            !$hasReading            => 'bg-slate-300',
             $floodProbability >= 75 => 'bg-rose-600',
             $floodProbability >= 40 => 'bg-amber-500',
             default                 => 'bg-emerald-600',
         };
 
         $probLabel = match(true) {
+            !$hasReading            => '⚪ AWAITING DATA',
             $floodProbability >= 75 => '🚨 HIGH RISK',
             $floodProbability >= 40 => '⚠️ STANDBY',
             default                 => '✅ SAFE',
@@ -53,7 +54,7 @@
                         Bedadung River - Baratan Station
                     </h1>
                     <p class="text-slate-500 text-xs sm:text-sm font-medium mt-2 leading-relaxed">
-                        Water level is rising, monitor sensor data continuously.
+                        {{ $hasReading ? 'Water level telemetry active, monitoring river status continuously.' : 'Awaiting physical Wemos D1 Mini sensor connection. Connect hardware to start live telemetry.' }}
                     </p>
                 </div>
 
@@ -64,7 +65,7 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 pulse-live"></span>
+                    <span class="w-2.5 h-2.5 rounded-full {{ $hasReading ? 'bg-emerald-500 pulse-live' : 'bg-slate-400' }}"></span>
                     Pos Sensor 01 Sumbersari
                 </span>
                 <span class="font-mono text-slate-400">ID: BEDADUNG_01</span>
@@ -83,7 +84,7 @@
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                     <span class="text-[11px] font-semibold text-slate-500 block">Water Level</span>
                     <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
-                        {{ number_format($waterLevelCm, 1) }} cm
+                        {{ !is_null($waterLevelCm) ? number_format($waterLevelCm, 1) . ' cm' : '--' }}
                     </span>
                 </div>
 
@@ -99,7 +100,7 @@
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                     <span class="text-[11px] font-semibold text-slate-500 block">Temperature</span>
                     <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
-                        {{ number_format($currentTemp, 1) }} °C
+                        {{ !is_null($currentTemp) ? number_format($currentTemp, 1) . ' °C' : '--' }}
                     </span>
                 </div>
 
@@ -107,7 +108,7 @@
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                     <span class="text-[11px] font-semibold text-slate-500 block">Humidity</span>
                     <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
-                        {{ number_format($currentHumidity, 0) }}% RH
+                        {{ !is_null($currentHumidity) ? number_format($currentHumidity, 0) . '% RH' : '--' }}
                     </span>
                 </div>
             </div>
