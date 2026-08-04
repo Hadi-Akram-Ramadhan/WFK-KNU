@@ -173,8 +173,15 @@
             </div>
             <div>
                 <span class="text-xs font-semibold text-slate-500 block">Sensor Status</span>
-                <span class="text-xl font-bold text-slate-900 tracking-tight mt-1 block">Active (Online)</span>
-                <span class="text-[11px] text-emerald-600 font-semibold block mt-0.5">Wemos D1 Mini Ready</span>
+                @if ($sensorOnline)
+                    <span class="text-xl font-bold text-emerald-600 tracking-tight mt-1 block">Online</span>
+                    <span class="text-[11px] text-emerald-500 font-semibold block mt-0.5">Last data: {{ $lastSeenAgo }}</span>
+                @else
+                    <span class="text-xl font-bold text-slate-400 tracking-tight mt-1 block">No Device</span>
+                    <span class="text-[11px] text-slate-400 font-medium block mt-0.5">
+                        {{ $lastSeenAgo ? 'Last seen: '.$lastSeenAgo : 'Awaiting sensor...' }}
+                    </span>
+                @endif
             </div>
         </div>
 
