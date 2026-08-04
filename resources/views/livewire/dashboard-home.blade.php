@@ -3,33 +3,21 @@
 <div class="flex flex-col gap-6" wire:poll.3s>
 
     @php
-        $status = $latestReading?->status ?? 'safe';
-        $distanceCm = (float)($latestReading?->distance_cm ?? 25);
-        $tempC = (float)($latestReading?->temperature_c ?? 33.3);
-        $humidityRH = (float)($latestReading?->humidity_percent ?? 57.0);
-
-        $statusTitle = match($status) {
-            'danger'  => 'DANGER',
-            'caution' => 'STANDBY',
-            default   => 'SAFE',
-        };
-
-        $statusDesc = match($status) {
-            'danger'  => 'Critical water level! Residents along the riverbank are advised to prepare for evacuation.',
-            'caution' => 'Water level is rising, monitor river conditions.',
-            default   => 'Water level is normal, river flow is smooth.',
-        };
+        $hasData = !is_null($latestReading);
+        $status = $latestReading?->status ?? 'unknown';
 
         $bannerGradient = match($status) {
             'danger'  => 'from-rose-600 via-rose-500 to-red-600',
             'caution' => 'from-amber-600 via-orange-500 to-amber-500',
-            default   => 'from-emerald-600 via-teal-500 to-emerald-500',
+            'safe'    => 'from-emerald-600 via-teal-500 to-emerald-500',
+            default   => 'from-slate-700 via-slate-800 to-slate-900',
         };
 
         $statusPillBg = match($status) {
             'danger'  => 'bg-rose-50 text-rose-700 border-rose-200',
             'caution' => 'bg-amber-50 text-amber-700 border-amber-200',
-            default   => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            'safe'    => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            default   => 'bg-slate-100 text-slate-600 border-slate-200',
         };
     @endphp
 
@@ -63,7 +51,9 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-white/20 z-10">
                 <div class="px-4 py-2.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
                     <span class="text-[11px] text-white/70 font-medium block">Water Level</span>
-                    <span class="font-mono text-base font-bold text-white mt-0.5 block">{{ number_format($waterLevelCm, 1) }} cm</span>
+                    <span class="font-mono text-base font-bold text-white mt-0.5 block">
+                        {{ !is_null($waterLevelCm) ? number_format($waterLevelCm, 1) . ' cm' : '--' }}
+                    </span>
                 </div>
                 <div class="px-4 py-2.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
                     <span class="text-[11px] text-white/70 font-medium block">Rain Status</span>
@@ -135,7 +125,9 @@
             <div>
                 <span class="text-xs font-semibold text-slate-500 block">Water Level</span>
                 <div class="flex items-baseline gap-1.5 mt-1">
-                    <span class="text-2xl font-black text-slate-900 tracking-tight">{{ number_format($waterLevelCm, 1) }}</span>
+                    <span class="text-2xl font-black text-slate-900 tracking-tight">
+                        {{ !is_null($waterLevelCm) ? number_format($waterLevelCm, 1) : '--' }}
+                    </span>
                     <span class="font-mono text-sm font-bold text-slate-500">cm</span>
                 </div>
             </div>
@@ -154,9 +146,13 @@
             <div>
                 <span class="text-xs font-semibold text-slate-500 block">Temperature</span>
                 <div class="flex items-baseline gap-2 mt-1">
-                    <span class="text-2xl font-black text-slate-900 tracking-tight">{{ number_format($tempC, 1) }}</span>
+                    <span class="text-2xl font-black text-slate-900 tracking-tight">
+                        {{ !is_null($tempC) ? number_format($tempC, 1) : '--' }}
+                    </span>
                     <span class="font-mono text-base font-bold text-slate-500">°C</span>
-                    <span class="text-xs text-slate-400 font-mono ml-auto">{{ number_format($humidityRH, 0) }}% RH</span>
+                    <span class="text-xs text-slate-400 font-mono ml-auto">
+                        {{ !is_null($humidityRH) ? number_format($humidityRH, 0) . '% RH' : '--' }}
+                    </span>
                 </div>
             </div>
         </div>

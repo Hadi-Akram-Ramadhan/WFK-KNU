@@ -14,8 +14,13 @@ class DashboardHome extends Component
     public ?AIAnalysis $latestAnalysis = null;
     public array $recentReadings = [];
     public array $recentAlerts = [];
-    public string $rainStatus = 'CLEAR';
-    public float $waterLevelCm = 186.5;
+
+    public string $rainStatus = 'NO DATA';
+    public ?float $waterLevelCm = null;
+    public ?float $tempC = null;
+    public ?float $humidityRH = null;
+    public string $statusTitle = 'NO DATA';
+    public string $statusDesc = 'Awaiting sensor hardware connection. Connect Wemos D1 Mini to start live telemetry.';
 
     public function mount(): void
     {
@@ -32,13 +37,35 @@ class DashboardHome extends Component
             $this->latestAnalysis = $this->node->analyses->first();
 
             if ($this->latestReading) {
-                // If humidity > 85%, rain status is RAINY, otherwise CLEAR
-                $humidity = (float) ($this->latestReading->humidity_percent ?? 57.0);
+                $status = $this->latestReading->status;
+
+                $this->statusTitle = match($status) {
+                    'danger'  => 'DANGER',
+                    'caution' => 'STANDBY',
+                    default   => 'SAFE',
+                };
+
+                $this->statusDesc = match($status) {
+                    'danger'  => 'Critical water level! Residents along the riverbank are advised to prepare for evacuation.',
+                    'caution' => 'Water level is rising, monitor river conditions.',
+                    default   => 'Water level is normal, river flow is smooth.',
+                };
+
+                $humidity = (float) ($this->latestReading->humidity_percent ?? 0);
+                $this->humidityRH = $humidity;
                 $this->rainStatus = $humidity > 85 ? 'RAINY' : 'CLEAR';
 
-                // Display water level in cm
+                $this->tempC = (float) ($this->latestReading->temperature_c ?? 0);
+
                 $dist = (float) $this->latestReading->distance_cm;
                 $this->waterLevelCm = round(200 - $dist, 1);
+            } else {
+                $this->statusTitle = 'NO DATA';
+                $this->statusDesc  = 'Awaiting sensor hardware connection. Connect Wemos D1 Mini to start live telemetry.';
+                $this->rainStatus  = 'NO DATA';
+                $this->waterLevelCm = null;
+                $this->tempC = null;
+                $this->humidityRH = null;
             }
 
             // Get last 10 readings for quick chart
