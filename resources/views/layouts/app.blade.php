@@ -4,7 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Command Dashboard') — Bedadung SFEWS</title>
-    <meta name="description" content="SMART FLOOD & RAIN MONITORING SYSTEM — Bedadung River Early Warning System">
+
+    {{-- Primary SEO Meta Tags --}}
+    <meta name="title" content="Bedadung SFEWS — Smart Flood & Rain Monitoring System">
+    <meta name="description" content="Real-time IoT early warning and AI-powered flood risk analytics for the Bedadung River stream, Jember. Continuous water level, rainfall, and weather monitoring.">
+    <meta name="keywords" content="Bedadung SFEWS, Flood Monitoring, Jember Early Warning System, IoT Water Sensor, Bedadung River, Realtime Telemetry, AI Flood Prediction">
+    <meta name="author" content="Bedadung SFEWS Team">
+    <meta name="theme-color" content="#0b132b">
+
+    {{-- Open Graph / Facebook / WhatsApp --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="Bedadung SFEWS — Smart Flood & Rain Monitoring System">
+    <meta property="og:description" content="Real-time IoT early warning and AI-powered flood risk analytics for the Bedadung River stream, Jember. Continuous water level, rainfall, and weather monitoring.">
+    <meta property="og:image" content="{{ asset('images/og-image.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Bedadung SFEWS">
+
+    {{-- Twitter Card Meta Tags --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="Bedadung SFEWS — Smart Flood & Rain Monitoring System">
+    <meta name="twitter:description" content="Real-time IoT early warning and AI-powered flood risk analytics for the Bedadung River stream, Jember. Continuous water level, rainfall, and weather monitoring.">
+    <meta name="twitter:image" content="{{ asset('images/og-image.png') }}">
 
     {{-- Google Fonts: Poppins & JetBrains Mono --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
