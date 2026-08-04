@@ -214,6 +214,7 @@
 
         {{-- Main Page Content --}}
         <main class="p-4 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full mx-auto">
+            {{ $slot ?? '' }}
             @yield('content')
         </main>
     </div>
