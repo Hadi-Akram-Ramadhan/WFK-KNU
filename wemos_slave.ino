@@ -1,22 +1,25 @@
 #include <ESP8266WiFi.h>
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
 #include <SoftwareSerial.h>
 
-// --- KONFIGURASI WIFI & TELEGRAM ---
-const char* ssid     = "NAMA_WIFI_LO";      // Ganti SSID Wi-Fi / Hotspot HP
-const char* password = "PASSWORD_WIFI_LO";  // Ganti Password Wi-Fi
-#define BOTtoken "TOKEN_BOT_TELEGRAM_LO"    // Token dari @BotFather
-#define CHAT_ID  "CHAT_ID_TELEGRAM_LO"     // Chat ID dari @myidbot
+// --- 1. KONFIGURASI WIFI ---
+const char* ssid     = "NAMA_WIFI_LO";      // Ganti dengan SSID Wi-Fi / Hotspot HP
+const char* password = "PASSWORD_WIFI_LO";  // Ganti dengan Password Wi-Fi
+
+// --- 2. KONFIGURASI WEBHOOK LARAVEL / DOKPLOY ---
+// Untuk Lokal: "http://192.168.x.x:8000/api/sensor/data"
+// Untuk Dokploy VPS: "http://domain-dokploy-lo.com/api/sensor/data"
+const char* serverUrl = "http://DOMAIN_DOKPLOY_LO.com/api/sensor/data";
+
+// Node ID Stasiun Sensor
+const char* nodeId = "BEDADUNG_01";
 
 // Software Serial terima data dari Arduino (RX = D5, TX = D6)
 SoftwareSerial arduinoSerial(D5, D6);
 
-X509List cert(TELEGRAM_CERTIFICATE_ROOT);
-WiFiClientSecure client;
-UniversalTelegramBot bot(BOTtoken, client);
-
-bool alertSent = false;
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 2000; // Kirim webhook setiap 2 detik
 
 void setup() {
   Serial.begin(115200);
@@ -24,10 +27,10 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  configTime(0, 0, "pool.ntp.org");
-  client.setTrustAnchors(&cert);
 
-  Serial.println("\n--- BEDADUNG SFEWS IoT BRIDGE ---");
+  Serial.println("\n==========================================");
+  Serial.println("  BEDADUNG SFEWS — DOKPLOY WEBHOOK BRIDGE ");
+  Serial.println("==========================================");
   Serial.print("Connecting to WiFi: ");
   Serial.println(ssid);
 
@@ -39,48 +42,60 @@ void setup() {
   Serial.println("\n[SUCCESS] WiFi Connected!");
   Serial.print("[INFO] IP Address: ");
   Serial.println(WiFi.localIP());
-
-  // === TES KONEKSI TELEGRAM SAAT STARTUP ===
-  String testMsg = "✅ *BEDADUNG SFEWS ONLINE*\n\n";
-  testMsg += "🤖 *Node Status:* Connected to WiFi!\n";
-  testMsg += "📡 *IP Address:* " + WiFi.localIP().toString() + "\n";
-  testMsg += "⚙️ *Bridge System:* Monitoring active.";
-  
-  if (bot.sendMessage(CHAT_ID, testMsg, "Markdown")) {
-    Serial.println("[TELEGRAM TEST] Message sent successfully!");
-  } else {
-    Serial.println("[TELEGRAM TEST] Failed to send message. Check Bot Token / Chat ID!");
-  }
+  Serial.print("[INFO] Webhook URL: ");
+  Serial.println(serverUrl);
 }
 
 void loop() {
   if (arduinoSerial.available()) {
     String rawData = arduinoSerial.readStringUntil('\n');
     rawData.trim();
-    
+
     float distance = rawData.toFloat();
-    
-    if (distance > 0) {
-      Serial.print("[DATA ARDUINO] Jarak: ");
+
+    // Pastikan data jarak valid dan sesuai interval 2 detik
+    if (distance > 0 && (millis() - lastSendTime >= sendInterval)) {
+      lastSendTime = millis();
+
+      Serial.print("\n[DATA ARDUINO] Jarak Air: ");
       Serial.print(distance);
       Serial.println(" cm");
 
-      if (distance < 10.0) {
-        if (!alertSent) {
-          String msg = "🚨 *BEDADUNG FLOOD EARLY WARNING SYSTEM* 🚨\n\n";
-          msg += "📍 *Lokasi:* Bridge Sensor Node 01 (Sumbersari)\n";
-          msg += "⚠️ *Status:* DANGER / CRITICAL!\n";
-          msg += "📊 *Jarak Air:* " + String(distance, 1) + " cm\n";
-          msg += "⚡ *Tindakan Otomatis:* Pintu Air Dibuka 90° & Sirene Bahaya Aktif!\n\n";
-          msg += "📌 *Peringatan:* Potensi luapan tinggi! Segera lakukan evakuasi.";
-          
-          if (bot.sendMessage(CHAT_ID, msg, "Markdown")) {
-            Serial.println("[ALERT] Emergency Telegram Sent!");
-            alertSent = true;
-          }
+      if (WiFi.status() == WL_CONNECTED) {
+        WiFiClient client;
+        HTTPClient http;
+
+        http.begin(client, serverUrl);
+        http.addHeader("Content-Type", "application/json");
+
+        // Format JSON Payload untuk Webhook Laravel
+        String jsonPayload = "{";
+        jsonPayload += "\"node_id\":\"" + String(nodeId) + "\",";
+        jsonPayload += "\"distance_cm\":" + String(distance, 1) + ",";
+        jsonPayload += "\"temperature_c\":28.5,";
+        jsonPayload += "\"humidity_percent\":78.0";
+        jsonPayload += "}";
+
+        Serial.print("[WEBHOOK POST] Sending payload to Dokploy: ");
+        Serial.println(jsonPayload);
+
+        int httpResponseCode = http.POST(jsonPayload);
+
+        if (httpResponseCode > 0) {
+          String response = http.getString();
+          Serial.print("[WEBHOOK SUCCESS] HTTP Code: ");
+          Serial.println(httpResponseCode);
+          Serial.print("[WEBHOOK RESPONSE] ");
+          Serial.println(response);
+        } else {
+          Serial.print("[WEBHOOK ERROR] HTTP POST Failed, Error Code: ");
+          Serial.println(httpResponseCode);
         }
+
+        http.end();
       } else {
-        alertSent = false; // Reset flag saat kondisi air aman kembali
+        Serial.println("[WIFI ERROR] Disconnected from WiFi. Reconnecting...");
+        WiFi.reconnect();
       }
     }
   }

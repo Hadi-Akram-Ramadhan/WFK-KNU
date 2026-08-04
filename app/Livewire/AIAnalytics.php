@@ -5,20 +5,27 @@ namespace App\Livewire;
 use App\Models\SensorNode;
 use App\Models\AIAnalysis;
 use App\Models\SensorReading;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class AIAnalytics extends Component
 {
     public ?SensorNode $node = null;
     public ?AIAnalysis $latestAnalysis = null;
-    public array $chartData = [];
+
     public string $currentStatus = 'safe';
     public float $currentDistance = 25.0;
-    public float $currentTemp = 28.5;
-    public float $currentHumidity = 78.0;
+    public float $currentTemp = 33.3;
+    public float $currentHumidity = 57.0;
+    public string $rainStatus = 'CLEAR';
+    public float $waterLevelCm = 186.5;
     public int $floodProbability = 15;
-    public string $weatherCondition = 'Kondisi Berawan';
+    public string $weatherCondition = 'Partly Cloudy';
     public array $automatedActions = [];
+
+    public array $recent10Readings = [];
+    public array $hourly24Readings = [];
+    public array $tableReadings = [];
 
     public function mount(): void
     {
@@ -39,8 +46,10 @@ class AIAnalytics extends Component
         if ($latest) {
             $this->currentStatus   = $latest->status;
             $this->currentDistance = (float) $latest->distance_cm;
-            $this->currentTemp     = (float) ($latest->temperature_c ?? 28.5);
-            $this->currentHumidity = (float) ($latest->humidity_percent ?? 78.0);
+            $this->currentTemp     = (float) ($latest->temperature_c ?? 33.3);
+            $this->currentHumidity = (float) ($latest->humidity_percent ?? 57.0);
+            $this->rainStatus      = $this->currentHumidity > 85 ? 'RAINY' : 'CLEAR';
+            $this->waterLevelCm    = round(200 - $this->currentDistance, 1);
         }
 
         // Determine AI Flood Probability
@@ -54,30 +63,15 @@ class AIAnalytics extends Component
             };
         }
 
-        // Weather condition label
+        // Weather condition label in English
         if ($this->latestAnalysis?->weather_condition) {
             $this->weatherCondition = $this->latestAnalysis->weather_condition;
         } else {
-            $this->weatherCondition = "Kelembapan Udara {$this->currentHumidity}% — " .
-                ($this->currentHumidity > 85 ? 'Terdeteksi Potensi Hujan Lebat di Hulu' : 'Kondisi Berawan Potensi Hujan Ringan');
+            $this->weatherCondition = "Humidity {$this->currentHumidity}% — " .
+                ($this->currentHumidity > 85 ? 'Potential Heavy Rainfall Upstream' : 'Partly Cloudy Weather');
         }
 
-        // Build multi-sensor time series for ApexCharts (last 60 minutes)
-        $this->chartData = SensorReading::where('sensor_node_id', $this->node->id)
-            ->where('created_at', '>=', now()->subMinutes(60))
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn($r) => [
-                'time'        => $r->created_at->format('H:i'),
-                'distance'    => (float) $r->distance_cm,
-                'temperature' => (float) ($r->temperature_c ?? 28.5),
-                'humidity'    => (float) ($r->humidity_percent ?? 78.0),
-                'status'      => $r->status,
-            ])
-            ->values()
-            ->toArray();
-
-        // Citizen actions from AI analysis or dynamic fallback based on status
+        // Citizen actions from AI analysis or dynamic fallback based on status (English)
         $aiActions = $this->latestAnalysis?->recommended_actions ?? [];
 
         if (!empty($aiActions) && is_array($aiActions)) {
@@ -88,22 +82,70 @@ class AIAnalytics extends Component
         } else {
             $this->automatedActions = match($this->currentStatus) {
                 'danger' => [
-                    ['label' => 'Amankan dokumen penting dan barang elektronik ke tempat tinggi / lantai 2', 'done' => true],
-                    ['label' => 'Siapkan Tas Siaga Bencana (P3K, senter, air minum, dan pakaian)', 'done' => true],
-                    ['label' => 'Segera evakuasi ke posko BPBD / tempat tinggi yang aman', 'done' => true],
+                    ['label' => 'Secure important documents and electronics to upper floors', 'done' => true],
+                    ['label' => 'Prepare emergency kit (first aid, flashlight, water, clothing)', 'done' => true],
+                    ['label' => 'Evacuate to designated safe shelters immediately if water continues to rise', 'done' => true],
                 ],
                 'caution' => [
-                    ['label' => 'Pantau perkembangan ketinggian air secara berkala', 'done' => true],
-                    ['label' => 'Awasi anak-anak dan hindari beraktivitas di dekat bantaran sungai', 'done' => true],
-                    ['label' => 'Pastikan daya baterai HP terisi penuh untuk komunikasi darurat', 'done' => true],
+                    ['label' => 'Monitor water level changes continuously', 'done' => true],
+                    ['label' => 'Supervise children and avoid riverbank activities', 'done' => true],
+                    ['label' => 'Ensure mobile phones are fully charged for emergency alerts', 'done' => true],
                 ],
                 default => [
-                    ['label' => 'Kondisi air sungai normal, pantau informasi berkala', 'done' => true],
-                    ['label' => 'Jaga kebersihan alur sungai dan hindari membuang sampah', 'done' => true],
-                    ['label' => 'Simpan nomor penting Call Center BPBD Jember 112', 'done' => true],
+                    ['label' => 'River water level normal, stay updated on local weather forecasts', 'done' => true],
+                    ['label' => 'Keep river channels clean and avoid dumping waste', 'done' => true],
+                    ['label' => 'Save emergency contacts for local disaster management (BPBD 112)', 'done' => true],
                 ]
             };
         }
+
+        // 1. Current Trend (10 Readings)
+        $this->recent10Readings = SensorReading::where('sensor_node_id', $this->node->id)
+            ->latest()
+            ->take(10)
+            ->get()
+            ->reverse()
+            ->map(fn($r) => [
+                'time'        => $r->created_at->format('H:i'),
+                'water_level' => round(200 - (float) $r->distance_cm, 1),
+                'distance'    => (float) $r->distance_cm,
+                'temp'        => (float) ($r->temperature_c ?? 33.3),
+                'humidity'    => (float) ($r->humidity_percent ?? 57.0),
+                'status'      => $r->status,
+            ])
+            ->values()
+            ->toArray();
+
+        // 2. 24-Hour History
+        $this->hourly24Readings = SensorReading::where('sensor_node_id', $this->node->id)
+            ->where('created_at', '>=', now()->subHours(24))
+            ->orderBy('created_at')
+            ->get()
+            ->map(fn($r) => [
+                'time'        => $r->created_at->format('H:i'),
+                'water_level' => round(200 - (float) $r->distance_cm, 1),
+                'distance'    => (float) $r->distance_cm,
+                'status'      => $r->status,
+            ])
+            ->values()
+            ->toArray();
+
+        // 3. Sensor Data Table (20 records)
+        $this->tableReadings = SensorReading::where('sensor_node_id', $this->node->id)
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(fn($r) => [
+                'id'          => $r->id,
+                'timestamp'   => $r->created_at->format('Y-m-d H:i:s'),
+                'time'        => $r->created_at->format('H:i:s'),
+                'water_level' => round(200 - (float) $r->distance_cm, 1),
+                'distance'    => (float) $r->distance_cm,
+                'temp'        => (float) ($r->temperature_c ?? 33.3),
+                'humidity'    => (float) ($r->humidity_percent ?? 57.0),
+                'status'      => $r->status,
+            ])
+            ->toArray();
     }
 
     public function render()

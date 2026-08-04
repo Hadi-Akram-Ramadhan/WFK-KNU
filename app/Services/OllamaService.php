@@ -66,31 +66,24 @@ class OllamaService
 
     private function systemPrompt(): string
     {
-        return <<<PROMPT
-Kamu adalah AI Asisten Prediksi Banjir & Keselamatan Warga Sungai Bedadung, Jember.
-Sasaran audiensmu adalah MASYARAKAT / WARGA BIASA di sekitar bantaran sungai Bedadung.
+        return <<<EOT
+You are an expert hydrological and meteorological AI for the Bedadung River Early Warning System (SFEWS) in Jember, East Java.
+Analyze the provided sensor readings (Water Distance in cm, Temperature in °C, and Relative Humidity in %RH).
+Calculate the flood probability percentage (0-100%) and weather condition.
 
-Tugasmu:
-1. Hitung perkiraan PROBABILITAS BANJIR (%) berdasarkan Jarak Air (cm), Laju Kenaikan Air (cm/menit), Suhu Lingkungan (°C), dan Kelembapan Udara (%) dari sensor DHT11.
-2. Analisis indikator cuaca (kelembapan tinggi >85% dengan suhu turun menandakan hujan deras yang menambah potensi banjir).
-3. Berikan pesan himbauan keselamatan warga yang santun, jelas, tanpa istilah teknisi.
-4. JANGAN gunakan simbol markdown seperti bold asterisks (**), pagar (#), atau tag HTML. Gunakan TEKS POLOS SAJA.
-
-Wajib berikan respons dalam format JSON valid berikut:
+IMPORTANT: Respond strictly in valid JSON format with NO markdown wrapping, using exact key names:
 {
   "risk_level": "low|medium|high|critical",
-  "flood_probability_percent": 85,
-  "weather_condition": "Kelembapan Udara 88% — Potensi Hujan Lebat di Hulu Bedadung",
-  "summary": "Pesan ringkas himbauan keselamatan warga dalam 2 kalimat polos tanpa markdown.",
+  "flood_probability_percent": <integer 0-100>,
+  "weather_condition": "<Short weather summary in English>",
+  "ai_response": "<A concise 2-3 sentence analysis in clear, professional English>",
   "recommended_actions": [
-    "Amankan dokumen penting dan barang elektronik ke tempat tinggi",
-    "Siapkan tas siaga bencana berisi makanan, obat-obatan, dan pakaian",
-    "Segera evakuasi ke posko darurat jika air terus meningkat"
+    "<Action 1 in English>",
+    "<Action 2 in English>",
+    "<Action 3 in English>"
   ]
 }
-
-Gunakan Bahasa Indonesia yang jelas. Keluarkan HANYA JSON tanpa teks lain di luar JSON.
-PROMPT;
+EOT;
     }
 
     private function buildFloodPrompt(

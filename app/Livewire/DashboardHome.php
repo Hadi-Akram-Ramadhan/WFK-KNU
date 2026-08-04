@@ -13,6 +13,9 @@ class DashboardHome extends Component
     public ?SensorReading $latestReading = null;
     public ?AIAnalysis $latestAnalysis = null;
     public array $recentReadings = [];
+    public array $recentAlerts = [];
+    public string $rainStatus = 'CLEAR';
+    public float $waterLevelCm = 186.5;
 
     public function mount(): void
     {
@@ -27,14 +30,48 @@ class DashboardHome extends Component
         if ($this->node) {
             $this->latestReading = $this->node->latestReading;
             $this->latestAnalysis = $this->node->analyses->first();
-            $this->recentReadings = $this->node->recentReadings(60)
+
+            if ($this->latestReading) {
+                // If humidity > 85%, rain status is RAINY, otherwise CLEAR
+                $humidity = (float) ($this->latestReading->humidity_percent ?? 57.0);
+                $this->rainStatus = $humidity > 85 ? 'RAINY' : 'CLEAR';
+
+                // Display water level in cm
+                $dist = (float) $this->latestReading->distance_cm;
+                $this->waterLevelCm = round(200 - $dist, 1);
+            }
+
+            // Get last 10 readings for quick chart
+            $this->recentReadings = SensorReading::where('sensor_node_id', $this->node->id)
+                ->latest()
+                ->take(10)
                 ->get()
+                ->reverse()
                 ->map(fn($r) => [
-                    'time'     => $r->created_at->format('H:i'),
-                    'distance' => (float) $r->distance_cm,
-                    'status'   => $r->status,
+                    'time'        => $r->created_at->format('H:i'),
+                    'water_level' => round(200 - (float) $r->distance_cm, 1),
+                    'distance'    => (float) $r->distance_cm,
+                    'status'      => $r->status,
                 ])
                 ->values()
+                ->toArray();
+
+            // Recent Alerts list in English
+            $this->recentAlerts = AIAnalysis::where('sensor_node_id', $this->node->id)
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn($a) => [
+                    'id'          => $a->id,
+                    'time'        => $a->created_at->format('H:i'),
+                    'title'       => match($a->risk_level) {
+                        'critical', 'high' => 'Danger threshold detected',
+                        'medium'           => 'Standby status detected',
+                        default            => 'River status normal',
+                    },
+                    'desc'        => $a->ai_response,
+                    'risk_level'  => $a->risk_level,
+                ])
                 ->toArray();
         }
     }

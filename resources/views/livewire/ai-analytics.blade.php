@@ -1,27 +1,27 @@
-<div class="flex flex-col gap-6 py-2 sm:py-4" wire:poll.3s>
-    {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono font-bold bg-sky-100 text-sky-700 uppercase tracking-wider">
-                    AI Multi-Sensor Analytics
-                </span>
-                <span class="text-[11px] sm:text-xs font-mono text-slate-400">• Pos Sumbersari</span>
-            </div>
-            <h1 class="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight">Analisis AI & Prediksi Banjir</h1>
-            <p class="text-slate-500 text-xs sm:text-sm font-normal mt-1 leading-relaxed">
-                Prediksi risiko banjir berbasis AI yang mengombinasikan sensor jarak air (HC-SR04) dan indikator cuaca DHT11 (Suhu & Kelembapan).
-            </p>
-        </div>
+@section('header_title', 'Sensor Analytics')
 
-        {{-- Live Refresh Pill --}}
-        <div class="self-start md:self-auto flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white border border-slate-200/80 shadow-xs text-xs font-medium text-slate-600">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live"></span>
-            <span>Update Otomatis Real-time</span>
-        </div>
-    </div>
+<div class="flex flex-col gap-6" wire:poll.3s>
 
     @php
+        $status = $latestReading?->status ?? 'safe';
+        $distanceCm = (float)($latestReading?->distance_cm ?? 25.0);
+        $tempC = (float)($latestReading?->temperature_c ?? 33.3);
+        $humidityRH = (float)($latestReading?->humidity_percent ?? 57.0);
+
+        $waterLevelCm = round(200 - $distanceCm, 1);
+
+        $statusTitle = match($status) {
+            'danger'  => 'DANGER',
+            'caution' => 'STANDBY',
+            default   => 'SAFE',
+        };
+
+        $statusPillStyle = match($status) {
+            'danger'  => 'bg-rose-100 text-rose-700 border-rose-200',
+            'caution' => 'bg-amber-100 text-amber-700 border-amber-200',
+            default   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        };
+
         $probColor = match(true) {
             $floodProbability >= 75 => 'text-rose-600 border-rose-200 bg-rose-50',
             $floodProbability >= 40 => 'text-amber-600 border-amber-200 bg-amber-50',
@@ -35,181 +35,252 @@
         };
 
         $probLabel = match(true) {
-            $floodProbability >= 75 => '🚨 POTENSI TINGGI',
-            $floodProbability >= 40 => '⚠️ SIAGA WASPADA',
-            default                 => '✅ AMAN TERKENDALI',
+            $floodProbability >= 75 => '🚨 HIGH RISK',
+            $floodProbability >= 40 => '⚠️ STANDBY',
+            default                 => '✅ SAFE',
         };
     @endphp
 
-    {{-- ── 3 CARDS STAT PREDIKSI AI MULTI-SENSOR ── --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+    {{-- ── 1. TOP SECTION: PRIMARY MONITORING DEVICE + REALTIME READINGS ── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {{-- Card 1: Probabilitas Banjir AI (%) --}}
-        <div class="clean-card p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden">
-            <div class="flex justify-between items-start mb-2">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
-                        <span class="material-symbols-outlined text-lg ms-fill">analytics</span>
-                    </div>
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Probabilitas Banjir AI</span>
+        {{-- Left: Primary Monitoring Device Banner (7 Cols) --}}
+        <div class="rainova-card lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-white">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="text-[11px] font-extrabold text-sky-600 uppercase tracking-widest block mb-2">
+                        PRIMARY MONITORING DEVICE
+                    </span>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                        Bedadung River - Baratan Station
+                    </h1>
+                    <p class="text-slate-500 text-xs sm:text-sm font-medium mt-2 leading-relaxed">
+                        Water level is rising, monitor sensor data continuously.
+                    </p>
                 </div>
-                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide {{ $probColor }}">
-                    {{ $probLabel }}
+
+                <span class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border {{ $statusPillStyle }}">
+                    {{ $statusTitle }}
                 </span>
             </div>
 
-            <div class="my-2">
-                <div class="flex items-baseline gap-2">
-                    <span class="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">{{ $floodProbability }}%</span>
-                    <span class="text-xs text-slate-500 font-medium">peluang meluap</span>
-                </div>
-                <p class="text-xs text-slate-500 mt-1">Dihitung otomatis oleh AI Ollama dari tren data multi-sensor.</p>
-            </div>
-
-            <div class="mt-2 space-y-1">
-                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
-                    <div class="h-full {{ $probBarColor }} rounded-full transition-all duration-700" style="width: {{ $floodProbability }}%"></div>
-                </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 pulse-live"></span>
+                    Pos Sensor 01 Sumbersari
+                </span>
+                <span class="font-mono text-slate-400">ID: BEDADUNG_01</span>
             </div>
         </div>
 
-        {{-- Card 2: Sensor DHT11 Suhu & Kelembapan Udara --}}
-        <div class="clean-card p-4 sm:p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start mb-2">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
-                        <span class="material-symbols-outlined text-lg ms-fill">device_thermostat</span>
-                    </div>
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Indikator Cuaca (DHT11)</span>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase bg-slate-100 text-slate-600">
-                    Sensor Aktif
-                </span>
+        {{-- Right: Realtime Readings Card (5 Cols) --}}
+        <div class="rainova-card lg:col-span-5 p-6 flex flex-col justify-between">
+            <div class="pb-3 border-b border-slate-100">
+                <h2 class="text-sm font-bold text-slate-900 tracking-tight">Realtime Readings</h2>
+                <span class="text-[11px] text-slate-400 font-medium">Latest telemetry metrics</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 sm:gap-3 my-1">
-                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span class="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Kelembapan Udara</span>
-                    <span class="font-mono text-lg sm:text-xl font-bold text-indigo-600">{{ number_format($currentHumidity, 1) }}%</span>
+            <div class="grid grid-cols-2 gap-4 my-2">
+                {{-- Water Level --}}
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-500 block">Water Level</span>
+                    <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
+                        {{ number_format($waterLevelCm, 1) }} cm
+                    </span>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span class="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Suhu Lingkungan</span>
-                    <span class="font-mono text-lg sm:text-xl font-bold text-amber-600">{{ number_format($currentTemp, 1) }}°C</span>
+
+                {{-- Rainfall Status --}}
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-500 block">Rainfall Status</span>
+                    <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block uppercase">
+                        {{ $rainStatus }}
+                    </span>
                 </div>
-            </div>
 
-            <p class="text-[11px] text-slate-500 truncate font-medium">
-                🌦️ {{ $weatherCondition }}
-            </p>
-        </div>
-
-        {{-- Card 3: Status Terkini & Tren Ketinggian Air --}}
-        <div class="clean-card p-4 sm:p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start mb-2">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                        <span class="material-symbols-outlined text-lg ms-fill">water_lux</span>
-                    </div>
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jarak Air dari Sensor</span>
+                {{-- Temperature --}}
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-500 block">Temperature</span>
+                    <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
+                        {{ number_format($currentTemp, 1) }} °C
+                    </span>
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase bg-slate-100 text-slate-600">
-                    HC-SR04
-                </span>
-            </div>
 
-            <div class="my-1">
-                <div class="flex items-baseline gap-2">
-                    <span class="font-mono text-3xl sm:text-4xl font-bold text-slate-900">{{ number_format($currentDistance, 1) }}</span>
-                    <span class="font-mono text-sm text-slate-500 font-semibold">cm</span>
+                {{-- Humidity --}}
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-500 block">Humidity</span>
+                    <span class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1 block font-mono">
+                        {{ number_format($currentHumidity, 0) }}% RH
+                    </span>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">
-                    @if($currentDistance < 10)
-                        🚨 Air berada di zona kritis (&lt;10cm). Potensi banjir sangat tinggi!
-                    @elseif($currentDistance <= 20)
-                        ⚠️ Air mendekati batas waspada (10-20cm). Pertahankan kesiapsiagaan.
-                    @else
-                        ✅ Ketinggian air normal (&gt;20cm). Aliran sungai lancar.
-                    @endif
-                </p>
-            </div>
-
-            <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
-                <span class="text-slate-400 text-[11px]">Pembaruan:</span>
-                <span class="font-mono font-semibold text-slate-700 text-[11px]">{{ now()->format('H:i:s') }} WIB</span>
             </div>
         </div>
 
     </div>
 
-    {{-- ── INTERACTIVE MULTI-SENSOR APEXCHARTS DASHBOARD ── --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+    {{-- ── 2. MIDDLE SECTION: 2 LINE CHARTS SIDE-BY-SIDE ── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {{-- Main Chart Container (8 Cols) --}}
-        <section class="lg:col-span-8 clean-card p-4 sm:p-6 flex flex-col gap-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+        {{-- Left Chart: Current Trend (Last 10 Readings) --}}
+        <div class="rainova-card p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                    <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sky-600 text-base">show_chart</span>
-                        Grafik Telemetry Multi-Sensor
-                    </h2>
-                    <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Gabungan data Ketinggian Air (cm), Suhu (°C), dan Kelembapan Udara (%)</p>
+                    <h2 class="text-sm font-bold text-slate-900 tracking-tight">Current Trend</h2>
+                    <span class="text-xs text-slate-400 font-medium">Last 10 readings</span>
                 </div>
-
-                {{-- Chart Legend Badges --}}
-                <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-[10px] sm:text-[11px] font-medium pt-1 sm:pt-0">
-                    <span class="flex items-center gap-1.5 text-sky-700">
-                        <span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span> Air (cm)
-                    </span>
-                    <span class="flex items-center gap-1.5 text-indigo-700">
-                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Kelembapan (%)
-                    </span>
-                    <span class="flex items-center gap-1.5 text-amber-700">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Suhu (°C)
-                    </span>
-                </div>
+                <span class="px-3 py-1 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 font-mono text-xs font-bold">
+                    {{ number_format($waterLevelCm, 1) }} cm
+                </span>
             </div>
 
-            {{-- ApexCharts Script & Div Container --}}
-            <div class="relative w-full h-72 sm:h-80" id="multiSensorChartContainer" wire:ignore>
-                <div id="sfewsApexChart" class="w-full h-full"></div>
-            </div>
-        </section>
+            {{-- SVG Smooth Line Chart (10 data) --}}
+            <div class="relative h-64 w-full">
+                <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="chartGrad10" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.0"/>
+                        </linearGradient>
+                    </defs>
+                    @php
+                        $pts10 = collect($recent10Readings);
+                        $pointsStr10 = $pts10->map(function($d, $i) use ($pts10) {
+                            $x = count($pts10) > 1 ? ($i / (count($pts10) - 1)) * 100 : 50;
+                            $y = min(88, max(12, 100 - (($d['water_level'] / 250) * 100)));
+                            return "{$x},{$y}";
+                        })->join(' ');
+                        $fill10 = "M0," . min(88, max(12, 100 - ((($recent10Readings[0]['water_level'] ?? 180) / 250) * 100))) .
+                                  ($pointsStr10 ? " L" . str_replace(' ', ' L', $pointsStr10) : '') .
+                                  " L100,100 L0,100 Z";
+                        $line10 = $recent10Readings ? "M" . implode(' L', array_map(function($d, $i) use ($pts10) {
+                            $x = count($pts10) > 1 ? ($i / (count($pts10) - 1)) * 100 : 50;
+                            $y = min(88, max(12, 100 - (($d['water_level'] / 250) * 100)));
+                            return "{$x},{$y}";
+                        }, $recent10Readings, array_keys($recent10Readings))) : "M0,50 L100,50";
+                    @endphp
+                    <path d="{{ $fill10 }}" fill="url(#chartGrad10)"/>
+                    <path d="{{ $line10 }}" fill="none" stroke="#0284c7" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+                </svg>
 
-        {{-- ── Panduan AI Keselamatan Warga (4 Cols) ── --}}
-        <section class="lg:col-span-4 clean-card p-4 sm:p-6 flex flex-col justify-between gap-4">
-            <div>
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-slate-700 text-lg">verified_user</span>
-                        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Langkah Keselamatan Warga</h2>
-                    </div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase bg-slate-100 text-slate-600">AI Verified</span>
-                </div>
-                <p class="text-xs font-normal text-slate-500 mt-2 leading-relaxed">
-                    Saran keselamatan publik yang direkomendasikan AI Ollama berdasarkan kondisi air & cuaca saat ini:
-                </p>
-
-                <div class="mt-4 space-y-2.5">
-                    @foreach($automatedActions as $i => $action)
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
-                        <span class="material-symbols-outlined text-emerald-600 text-[18px] mt-0.5">check_circle</span>
-                        <div class="flex-1">
-                            <p class="font-semibold text-slate-800 leading-snug">{{ $action['label'] }}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Dianjurkan untuk keselamatan keluarga</p>
-                        </div>
-                    </div>
+                <div class="absolute bottom-0 w-full flex justify-between font-mono text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+                    @foreach($recent10Readings as $r)
+                        <span>{{ $r['time'] }}</span>
                     @endforeach
                 </div>
             </div>
+        </div>
 
-            <div class="pt-3 border-t border-slate-100">
-                <a href="tel:112" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined text-base ms-fill">call</span>
-                    Hubungi Call Center BPBD 112
-                </a>
+        {{-- Right Chart: 24-Hour History (Hourly water level) --}}
+        <div class="rainova-card p-6 flex flex-col justify-between gap-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 tracking-tight">24-Hour History</h2>
+                    <span class="text-xs text-slate-400 font-medium">Hourly water level trend</span>
+                </div>
+                <span class="px-3 py-1 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 font-mono text-xs font-bold">
+                    {{ number_format($waterLevelCm, 1) }} cm
+                </span>
             </div>
-        </section>
+
+            {{-- SVG Smooth Line Chart (24 Jam) --}}
+            <div class="relative h-64 w-full">
+                <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="chartGrad24" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.0"/>
+                        </linearGradient>
+                    </defs>
+                    @php
+                        $pts24 = collect($hourly24Readings);
+                        $pointsStr24 = $pts24->map(function($d, $i) use ($pts24) {
+                            $x = count($pts24) > 1 ? ($i / (count($pts24) - 1)) * 100 : 50;
+                            $y = min(88, max(12, 100 - (($d['water_level'] / 250) * 100)));
+                            return "{$x},{$y}";
+                        })->join(' ');
+                        $fill24 = "M0," . min(88, max(12, 100 - ((($hourly24Readings[0]['water_level'] ?? 180) / 250) * 100))) .
+                                  ($pointsStr24 ? " L" . str_replace(' ', ' L', $pointsStr24) : '') .
+                                  " L100,100 L0,100 Z";
+                        $line24 = $hourly24Readings ? "M" . implode(' L', array_map(function($d, $i) use ($pts24) {
+                            $x = count($pts24) > 1 ? ($i / (count($pts24) - 1)) * 100 : 50;
+                            $y = min(88, max(12, 100 - (($d['water_level'] / 250) * 100)));
+                            return "{$x},{$y}";
+                        }, $hourly24Readings, array_keys($hourly24Readings))) : "M0,50 L100,50";
+                    @endphp
+                    <path d="{{ $fill24 }}" fill="url(#chartGrad24)"/>
+                    <path d="{{ $line24 }}" fill="none" stroke="#0284c7" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+                </svg>
+
+                <div class="absolute bottom-0 w-full flex justify-between font-mono text-[10px] text-slate-400 pt-2 border-t border-slate-100">
+                    @foreach(array_slice($hourly24Readings, -6) as $r)
+                        <span>{{ $r['time'] }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    {{-- ── 3. SENSOR DATA TABLE ── --}}
+    <div class="rainova-card p-6">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div>
+                <h2 class="text-base font-bold text-slate-900 tracking-tight">Sensor Data Table</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Complete historical telemetry records from HC-SR04 & DHT11</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl bg-slate-100 text-slate-600 text-xs font-mono font-semibold">
+                Total: {{ count($tableReadings) }} Records
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                        <th class="py-3 px-4">#</th>
+                        <th class="py-3 px-4">Timestamp</th>
+                        <th class="py-3 px-4">Sensor Location</th>
+                        <th class="py-3 px-4 text-right">Distance (cm)</th>
+                        <th class="py-3 px-4 text-right">Water Level (cm)</th>
+                        <th class="py-3 px-4 text-right">Temperature (°C)</th>
+                        <th class="py-3 px-4 text-right">Humidity (%RH)</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-mono">
+                    @forelse($tableReadings as $idx => $row)
+                    @php
+                        $rowPill = match($row['status']) {
+                            'danger'  => 'bg-rose-100 text-rose-700',
+                            'caution' => 'bg-amber-100 text-amber-700',
+                            default   => 'bg-emerald-100 text-emerald-700',
+                        };
+                    @endphp
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3 px-4 font-bold text-slate-400">{{ $idx + 1 }}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-700">{{ $row['timestamp'] }}</td>
+                        <td class="py-3 px-4 font-sans text-slate-600">Bedadung - Baratan</td>
+                        <td class="py-3 px-4 text-right text-slate-700">{{ number_format($row['distance'], 1) }} cm</td>
+                        <td class="py-3 px-4 text-right font-bold text-slate-900">{{ number_format($row['water_level'], 1) }} cm</td>
+                        <td class="py-3 px-4 text-right text-slate-700">{{ number_format($row['temp'], 1) }} °C</td>
+                        <td class="py-3 px-4 text-right text-slate-700">{{ number_format($row['humidity'], 0) }}% RH</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide {{ $rowPill }}">
+                                {{ strtoupper($row['status']) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 font-sans text-xs">
+                            No telemetry records found.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
@@ -221,7 +292,7 @@
         let chart = null;
 
         function initOrUpdateChart() {
-            const chartData = @json($chartData);
+            const chartData = @json($recent10Readings);
             if (!chartData || chartData.length === 0) return;
 
             const isMobile = window.innerWidth < 768;
@@ -229,13 +300,13 @@
             const categories = chartData.map(d => d.time);
             const distances  = chartData.map(d => d.distance);
             const humidities = chartData.map(d => d.humidity);
-            const temps      = chartData.map(d => d.temperature);
+            const temps      = chartData.map(d => d.temp);
 
             const options = {
                 series: [
-                    { name: 'Jarak Air (cm)', type: 'area', data: distances },
-                    { name: 'Kelembapan (%)', type: 'line', data: humidities },
-                    { name: 'Suhu (°C)', type: 'line', data: temps }
+                    { name: 'Water Distance (cm)', type: 'area', data: distances },
+                    { name: 'Humidity (%)', type: 'line', data: humidities },
+                    { name: 'Temperature (°C)', type: 'line', data: temps }
                 ],
                 chart: {
                     height: isMobile ? 280 : 320,
@@ -270,7 +341,7 @@
                 yaxis: [
                     {
                         show: true,
-                        title: { text: isMobile ? '' : 'Jarak Air (cm)', style: { color: '#0284c7', fontSize: '11px' } },
+                        title: { text: isMobile ? '' : 'Distance (cm)', style: { color: '#0284c7', fontSize: '11px' } },
                         labels: { style: { colors: '#0284c7', fontSize: isMobile ? '10px' : '11px', fontFamily: 'JetBrains Mono' } },
                         min: 0,
                         max: 35
@@ -278,7 +349,7 @@
                     {
                         opposite: true,
                         show: true,
-                        title: { text: isMobile ? '' : 'Kelembapan (%) / Suhu (°C)', style: { color: '#4f46e5', fontSize: '11px' } },
+                        title: { text: isMobile ? '' : 'Humidity (%) / Temp (°C)', style: { color: '#4f46e5', fontSize: '11px' } },
                         labels: { style: { colors: '#4f46e5', fontSize: isMobile ? '10px' : '11px', fontFamily: 'JetBrains Mono' } },
                         min: 20,
                         max: 100
@@ -292,7 +363,7 @@
                             label: {
                                 borderColor: '#f43f5e',
                                 style: { color: '#fff', background: '#f43f5e', fontSize: isMobile ? '8px' : '10px' },
-                                text: isMobile ? 'Bahaya (<10cm)' : 'Batas Bahaya (<10cm)'
+                                text: isMobile ? 'Danger (<10cm)' : 'Danger Threshold (<10cm)'
                             }
                         },
                         {
@@ -301,7 +372,7 @@
                             label: {
                                 borderColor: '#f59e0b',
                                 style: { color: '#fff', background: '#f59e0b', fontSize: isMobile ? '8px' : '10px' },
-                                text: isMobile ? 'Waspada (10-20cm)' : 'Batas Waspada (10-20cm)'
+                                text: isMobile ? 'Standby (10-20cm)' : 'Standby Threshold (10-20cm)'
                             }
                         }
                     ]
