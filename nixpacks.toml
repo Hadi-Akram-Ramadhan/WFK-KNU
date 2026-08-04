@@ -2,7 +2,7 @@
 NIXPACKS_PHP_ROOT_DIR = "public"
 
 [phases.setup]
-nixPkgs = ["php82", "php82Packages.composer", "nodejs_20"]
+nixPkgs = ["php82", "php82Packages.composer", "nodejs_20", "nginx"]
 
 [phases.install]
 cmds = [
@@ -18,3 +18,6 @@ cmds = [
     "php artisan config:clear",
     "php artisan migrate --force"
 ]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=8080"
