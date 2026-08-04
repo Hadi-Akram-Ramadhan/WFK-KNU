@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\SensorNode;
 use App\Models\AIAnalysis;
 use App\Models\SensorReading;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 class AIAnalytics extends Component
@@ -34,9 +33,17 @@ class AIAnalytics extends Component
 
     public function loadData(): void
     {
-        $this->node = SensorNode::with(['latestReading'])->first();
-
-        if (!$this->node) return;
+        $this->node = SensorNode::with(['latestReading'])->firstOrCreate(
+            ['node_id' => 'BEDADUNG_01'],
+            [
+                'name'             => 'Checkpoint Alpha — Sumbersari',
+                'latitude'         => -8.168567,
+                'longitude'        => 113.700339,
+                'status'           => 'offline',
+                'sensor_height_cm' => 30.0,
+                'api_token'        => 'bedadung-sfews-secret-token-01',
+            ]
+        );
 
         $this->latestAnalysis = AIAnalysis::where('sensor_node_id', $this->node->id)
             ->latest()

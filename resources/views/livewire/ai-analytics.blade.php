@@ -1,12 +1,10 @@
-@section('header_title', 'Sensor Analytics')
-
 <div class="flex flex-col gap-6" wire:poll.3s>
 
     @php
-        $status = $latestReading?->status ?? 'safe';
-        $distanceCm = (float)($latestReading?->distance_cm ?? 25.0);
-        $tempC = (float)($latestReading?->temperature_c ?? 33.3);
-        $humidityRH = (float)($latestReading?->humidity_percent ?? 57.0);
+        $status = $currentStatus ?? 'safe';
+        $distanceCm = (float)($currentDistance ?? 25.0);
+        $tempC = (float)($currentTemp ?? 33.3);
+        $humidityRH = (float)($currentHumidity ?? 57.0);
 
         $waterLevelCm = round(200 - $distanceCm, 1);
 

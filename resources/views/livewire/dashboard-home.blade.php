@@ -246,7 +246,7 @@
                     <h2 class="text-sm font-bold text-slate-900 tracking-tight">Recent Alerts</h2>
                     <p class="text-xs text-slate-400 mt-0.5">Recent system alert log</p>
                 </div>
-                <a href="{{ route('control') }}" class="text-xs font-bold text-sky-600 hover:text-sky-700">All</a>
+                <a href="{{ route('alerts') }}" class="text-xs font-bold text-sky-600 hover:text-sky-700">All</a>
             </div>
 
             <div class="space-y-3 my-1">
