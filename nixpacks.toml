@@ -14,5 +14,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-    "npm run build"
+    "npm run build",
+    "php artisan config:clear",
+    "php artisan migrate --force"
 ]
