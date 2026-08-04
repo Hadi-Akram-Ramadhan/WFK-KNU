@@ -67,6 +67,10 @@
 
         .material-symbols-outlined { font-variation-settings: 'FILL' 0; }
         .ms-fill { font-variation-settings: 'FILL' 1; }
+
+        /* Fix Leaflet map z-index overlapping sticky header */
+        .leaflet-pane { z-index: 10 !important; }
+        .leaflet-top, .leaflet-bottom { z-index: 20 !important; }
     </style>
 
     {{-- Global JS Guard for Pusher & Echo --}}
@@ -176,7 +180,7 @@
     <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
 
         {{-- Top Bar Header --}}
-        <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200 px-5 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-30 shadow-xs">
+        <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200 px-5 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-40 shadow-xs">
             <div>
                 <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-sky-600 block">
                     SMART FLOOD & RAIN MONITORING SYSTEM

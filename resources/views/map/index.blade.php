@@ -1,10 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Live Map')
+@section('title', 'Live Geospatial Map — Bedadung SFEWS')
+@section('header_title', 'Sensor Map')
+
 @section('content')
 <div class="flex flex-col gap-6 py-4">
     <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Live Peta Geospasial Node</h1>
-        <p class="text-slate-500 text-sm font-normal mt-1">Pemetaan lokasi fisik sensor ultrasonik di sepanjang Aliran Sungai Bedadung</p>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Live Geospatial Node Map</h1>
+        <p class="text-slate-500 text-sm font-normal mt-1">Physical location mapping of ultrasonic sensors along the Bedadung River stream</p>
     </div>
 
     {{-- Leaflet Map Box --}}
@@ -49,13 +51,13 @@
                     <p class="font-mono text-xl font-bold {{ $textColor }}">
                         {{ number_format($latest->distance_cm, 1) }}
                     </p>
-                    <p class="text-[11px] font-medium text-slate-400">Jarak Air (cm)</p>
+                    <p class="text-[11px] font-medium text-slate-400">Water Distance (cm)</p>
                 </div>
                 <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/60 text-center">
                     <p class="font-mono text-xl font-bold {{ $textColor }}">
                         {{ number_format($latest->capacity_percent, 0) }}%
                     </p>
-                    <p class="text-[11px] font-medium text-slate-400">Kapasitas</p>
+                    <p class="text-[11px] font-medium text-slate-400">Capacity</p>
                 </div>
             </div>
 
@@ -68,7 +70,7 @@
                 </span>
             </div>
             @else
-            <p class="text-xs text-slate-400 text-center py-4">Belum ada data sensor terdeteksi</p>
+            <p class="text-xs text-slate-400 text-center py-4">No sensor data detected yet</p>
             @endif
         </div>
         @endforeach

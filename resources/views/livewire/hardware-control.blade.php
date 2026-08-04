@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6 py-4" wire:poll.3s>
     <div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Kontrol Hardware & Aktuator</h1>
-        <p class="text-slate-500 text-sm font-normal mt-1">Pengaturan posisi servo pintu air, sirine darurat, dan log kontrol edge</p>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Hardware Control & Actuators</h1>
+        <p class="text-slate-500 text-sm font-normal mt-1">Settings for floodgate servo position, emergency siren, and edge control logs</p>
     </div>
 
     {{-- Flash Notification --}}
@@ -20,20 +20,20 @@
                 <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
                     <span class="material-symbols-outlined text-lg">settings_remote</span>
                 </div>
-                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kontrol Aktuator Remote</h2>
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Remote Actuator Control</h2>
             </div>
 
             <div class="space-y-6">
                 {{-- Automated Floodgate Switch --}}
                 <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/60">
                     <div>
-                        <h3 class="text-sm font-semibold text-slate-900">Mode Otomatis Pintu Air</h3>
-                        <p class="text-xs font-normal text-slate-500 mt-0.5">Servo bergerak sesuai deteksi ambang batas AI / sensor</p>
+                        <h3 class="text-sm font-semibold text-slate-900">Automated Floodgate Mode</h3>
+                        <p class="text-xs font-normal text-slate-500 mt-0.5">Servo moves according to AI / sensor threshold detection</p>
                     </div>
                     <button wire:click="toggleAutomatedMode"
                             class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all border
                                 {{ $automatedMode ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-200 text-slate-600 border-slate-300' }}">
-                        {{ $automatedMode ? 'AKTIF (AUTO)' : 'NON-AKTIF' }}
+                        {{ $automatedMode ? 'ACTIVE (AUTO)' : 'DISABLED' }}
                     </button>
                 </div>
 
@@ -41,8 +41,8 @@
                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/60 flex flex-col gap-3">
                     <div class="flex justify-between items-end">
                         <div>
-                            <h3 class="text-sm font-semibold text-slate-900">Pengaturan Sudut Servo Manual</h3>
-                            <p class="text-xs font-normal text-slate-500 mt-0.5">Posisi katup pintu air (0° tertutup, 90° terbuka penuh)</p>
+                            <h3 class="text-sm font-semibold text-slate-900">Manual Servo Angle Adjustment</h3>
+                            <p class="text-xs font-normal text-slate-500 mt-0.5">Floodgate valve position (0° closed, 90° fully open)</p>
                         </div>
                         <div class="px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-xs">
                             <span class="font-mono text-xl font-bold text-slate-900">{{ $servoAngle }}°</span>
@@ -54,29 +54,29 @@
                                wire:model="servoAngle"
                                class="w-full cursor-pointer accent-sky-600">
                         <div class="flex justify-between font-mono text-[11px] text-slate-400 mt-2">
-                            <span>0° (Tertutup)</span>
-                            <span>45° (Separuh)</span>
-                            <span>90° (Terbuka Penuh)</span>
+                            <span>0° (Closed)</span>
+                            <span>45° (Half)</span>
+                            <span>90° (Fully Open)</span>
                         </div>
                     </div>
 
                     <button wire:click="setServoAngle"
                             class="mt-1 w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-all shadow-xs flex items-center justify-center gap-1.5">
                         <span class="material-symbols-outlined text-[16px]">send</span>
-                        Kirim Posisi Servo Ke Wemos
+                        Send Servo Position To Wemos
                     </button>
                 </div>
 
                 {{-- Siren Emergency Test --}}
                 <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-200/60 flex items-center justify-between gap-4">
                     <div>
-                        <h3 class="text-sm font-semibold text-rose-900">Uji Coba Sirine Darurat</h3>
-                        <p class="text-xs font-normal text-rose-700/80 mt-0.5">Menyalahkan buzzer / sirine fisik selama 3 detik</p>
+                        <h3 class="text-sm font-semibold text-rose-900">Emergency Siren Test</h3>
+                        <p class="text-xs font-normal text-rose-700/80 mt-0.5">Trigger physical buzzer / siren for 3 seconds</p>
                     </div>
                     <button wire:click="testSiren"
                             class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-[16px]">volume_up</span>
-                        TES SIRINE
+                        TEST SIREN
                     </button>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2.5">
                         <span class="material-symbols-outlined text-slate-700 text-lg">terminal</span>
-                        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Log Perintah Hardware</h2>
+                        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hardware Command Logs</h2>
                     </div>
                     <button wire:click="loadLogs" class="text-slate-400 hover:text-slate-700 transition-all" title="Refresh">
                         <span class="material-symbols-outlined text-sm">refresh</span>
@@ -131,7 +131,7 @@
                     @empty
                     <div class="py-10 text-center">
                         <span class="material-symbols-outlined text-3xl text-slate-300 mb-1">history</span>
-                        <p class="text-xs font-medium text-slate-400">Belum ada riwayat perintah.</p>
+                        <p class="text-xs font-medium text-slate-400">No command history yet.</p>
                     </div>
                     @endforelse
                 </div>
