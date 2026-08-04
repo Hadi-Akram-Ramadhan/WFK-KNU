@@ -131,14 +131,23 @@
                     </span>
                 </a>
 
+                <a href="{{ route('alerts') }}"
+                   class="flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-150
+                          {{ request()->routeIs('alerts') ? 'bg-slate-800/90 text-white border border-slate-700/80 shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40' }}">
+                    <span class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-lg {{ request()->routeIs('alerts') ? 'ms-fill text-rose-400' : '' }}">notifications_active</span>
+                        Alert Center
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-900/60 text-rose-300 border border-rose-800/60">99+</span>
+                </a>
+
                 <a href="{{ route('control') }}"
                    class="flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-150
                           {{ request()->routeIs('control') ? 'bg-slate-800/90 text-white border border-slate-700/80 shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40' }}">
                     <span class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-lg {{ request()->routeIs('control') ? 'ms-fill text-sky-400' : '' }}">warning</span>
-                        Alert Center
+                        <span class="material-symbols-outlined text-lg {{ request()->routeIs('control') ? 'ms-fill text-sky-400' : '' }}">settings_remote</span>
+                        Hardware Control
                     </span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-sky-400 border border-slate-700">99+</span>
                 </a>
             </nav>
         </div>
@@ -212,10 +221,10 @@
             <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('map') ? 'ms-fill' : '' }}">location_on</span>
             <span class="text-[10px] mt-0.5">Map</span>
         </a>
-        <a href="{{ route('control') }}"
+        <a href="{{ route('alerts') }}"
            class="flex flex-col items-center p-2 rounded-xl text-xs font-medium transition-all
-                  {{ request()->routeIs('control') ? 'text-sky-400 font-semibold' : 'text-slate-400' }}">
-            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('control') ? 'ms-fill' : '' }}">warning</span>
+                  {{ request()->routeIs('alerts') ? 'text-rose-400 font-semibold' : 'text-slate-400' }}">
+            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('alerts') ? 'ms-fill' : '' }}">notifications_active</span>
             <span class="text-[10px] mt-0.5">Alerts</span>
         </a>
     </nav>
