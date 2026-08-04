@@ -8,9 +8,7 @@ const char* ssid     = "NAMA_WIFI_LO";      // Ganti dengan SSID Wi-Fi / Hotspot
 const char* password = "PASSWORD_WIFI_LO";  // Ganti dengan Password Wi-Fi
 
 // --- 2. KONFIGURASI WEBHOOK LARAVEL / DOKPLOY ---
-// Untuk Lokal: "http://192.168.x.x:8000/api/sensor/data"
-// Untuk Dokploy VPS: "http://domain-dokploy-lo.com/api/sensor/data"
-const char* serverUrl = "http://DOMAIN_DOKPLOY_LO.com/api/sensor/data";
+const char* serverUrl = "https://wfk-samasama.hadooyy.my.id/api/sensor/data";
 
 // Node ID Stasiun Sensor
 const char* nodeId = "BEDADUNG_01";
