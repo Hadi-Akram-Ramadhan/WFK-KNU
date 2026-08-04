@@ -141,14 +141,6 @@
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-900/60 text-rose-300 border border-rose-800/60">99+</span>
                 </a>
 
-                <a href="{{ route('control') }}"
-                   class="flex items-center justify-between px-4 py-3 rounded-xl text-xs font-semibold transition-all duration-150
-                          {{ request()->routeIs('control') ? 'bg-slate-800/90 text-white border border-slate-700/80 shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800/40' }}">
-                    <span class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-lg {{ request()->routeIs('control') ? 'ms-fill text-sky-400' : '' }}">settings_remote</span>
-                        Hardware Control
-                    </span>
-                </a>
             </nav>
         </div>
 

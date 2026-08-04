@@ -110,7 +110,7 @@
         <div class="rainova-card p-5 flex flex-col justify-between relative">
             <div class="flex items-center justify-between mb-3">
                 <div class="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
-                    <span class="material-symbols-outlined text-2xl ms-fill">cloudy_snow</span>
+                    <span class="material-symbols-outlined text-2xl ms-fill">water_drop</span>
                 </div>
                 <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold uppercase bg-slate-100 text-slate-500">
                     REALTIME
