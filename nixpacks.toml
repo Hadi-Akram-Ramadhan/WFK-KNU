@@ -1,11 +1,8 @@
-providers = ["php", "node"]
-
 [variables]
 NIXPACKS_PHP_ROOT_DIR = "public"
-APP_ENV = "production"
 
 [phases.setup]
-nixPkgs = ["php82", "php82Packages.composer", "nodejs_18", "nginx"]
+nixPkgs = ["php82", "php82Packages.composer", "nodejs_18"]
 
 [phases.install]
 cmds = [
@@ -19,6 +16,3 @@ cmds = [
 cmds = [
     "npm run build"
 ]
-
-[start]
-cmd = "php artisan serve --host=0.0.0.0 --port=80"
