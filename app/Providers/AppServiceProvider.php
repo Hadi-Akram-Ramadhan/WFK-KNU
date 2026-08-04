@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Livewire\Livewire;
 use App\Models\SensorReading;
+use App\Livewire\AiAnalytics;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,12 @@ class AppServiceProvider extends ServiceProvider
         // Force HTTPS in production to prevent Mixed Content errors with Livewire assets
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
+        }
+
+        // Explicitly register Livewire component names to avoid naming convention mismatches
+        if (class_exists(Livewire::class)) {
+            Livewire::component('ai-analytics', AiAnalytics::class);
+            Livewire::component('a-i-analytics', AiAnalytics::class);
         }
 
         // Share real-time sidebar data to all views

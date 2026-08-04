@@ -7,7 +7,7 @@ use App\Models\AIAnalysis;
 use App\Models\SensorReading;
 use Livewire\Component;
 
-class AIAnalytics extends Component
+class AiAnalytics extends Component
 {
     public ?SensorNode $node = null;
     public ?AIAnalysis $latestAnalysis = null;
