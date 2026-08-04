@@ -74,6 +74,7 @@
     <script>
         const dummyChannel = { listen: function() { return this; }, stopListening: function() { return this; } };
         window.Echo = window.Echo || {
+            socketId: function() { return null; },
             private: function() { return dummyChannel; },
             channel: function() { return dummyChannel; },
             encryptedPrivate: function() { return dummyChannel; },
@@ -138,20 +139,35 @@
                         <span class="material-symbols-outlined text-lg {{ request()->routeIs('alerts') ? 'ms-fill text-rose-400' : '' }}">notifications_active</span>
                         Alert Center
                     </span>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-900/60 text-rose-300 border border-rose-800/60">99+</span>
+                    @if ($globalAlertCount > 0)
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-900/60 text-rose-300 border border-rose-800/60">
+                            {{ $globalAlertCount > 99 ? '99+' : $globalAlertCount }}
+                        </span>
+                    @endif
                 </a>
 
             </nav>
         </div>
 
-        {{-- Sidebar Footer Status Box --}}
-        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs">
+        {{-- Sidebar Footer Status Box — Dynamic --}}
+        <div class="p-3.5 rounded-2xl border text-xs transition-all
+            {{ $sensorOnline ? 'bg-slate-900/90 border-slate-800' : 'bg-slate-900/60 border-slate-700/50' }}">
             <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live"></span>
-                <div>
-                    <span class="font-bold text-white block leading-snug">MQTT Connected</span>
-                    <span class="text-[10px] text-slate-400">Device Active & Synchronized</span>
-                </div>
+                @if ($sensorOnline)
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-live flex-shrink-0"></span>
+                    <div>
+                        <span class="font-bold text-white block leading-snug">Sensor Online</span>
+                        <span class="text-[10px] text-slate-400">Last data: {{ $lastSeenAgo }}</span>
+                    </div>
+                @else
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-600 flex-shrink-0"></span>
+                    <div>
+                        <span class="font-bold text-slate-400 block leading-snug">No Device Connected</span>
+                        <span class="text-[10px] text-slate-600">
+                            {{ $lastSeenAgo ? 'Last seen: '.$lastSeenAgo : 'Awaiting sensor data...' }}
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
     </aside>
@@ -177,12 +193,17 @@
                     <span id="digitalClock">{{ now()->format('H:i:s') }}</span>
                 </div>
 
-                {{-- Notification Bell button --}}
+                {{-- Notification Bell button — links to Alert Center --}}
                 <div class="relative">
-                    <button class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center transition-all">
+                    <a href="{{ route('alerts') }}"
+                       class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center transition-all">
                         <span class="material-symbols-outlined text-lg">notifications</span>
-                    </button>
-                    <span class="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-600 text-white shadow-xs">99+</span>
+                    </a>
+                    @if ($globalAlertCount > 0)
+                        <span class="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-600 text-white shadow-xs">
+                            {{ $globalAlertCount > 99 ? '99+' : $globalAlertCount }}
+                        </span>
+                    @endif
                 </div>
             </div>
         </header>
