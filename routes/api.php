@@ -9,15 +9,17 @@ use Illuminate\Support\Facades\Route;
 | API Routes — Bedadung SFEWS
 |--------------------------------------------------------------------------
 |
-| POST /api/sensor/data        → Terima data dari Wemos D1 Mini
-| GET  /api/sensor/nodes       → Daftar semua node & status terkini
-| GET  /api/hardware/commands/{nodeId} → Pending commands untuk Wemos
-| POST /api/hardware/command   → Kirim command dari dashboard
-| GET  /api/hardware/logs/{nodeId}     → Log hardware commands
+| GET  /api/sensor/data        → Check API status
+| POST /api/sensor/data        → Ingest data from Wemos D1 Mini
+| GET  /api/sensor/nodes       → List nodes & latest status
+| GET  /api/hardware/commands/{nodeId} → Pending commands for Wemos
+| POST /api/hardware/command   → Send command from dashboard
+| GET  /api/hardware/logs/{nodeId}     → Hardware command logs
 |
 */
 
 Route::prefix('sensor')->group(function () {
+    Route::get('/data',   [SensorDataController::class, 'status']);
     Route::post('/data',  [SensorDataController::class, 'ingest']);
     Route::get('/nodes',  [SensorDataController::class, 'nodes']);
 });
