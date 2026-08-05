@@ -546,50 +546,92 @@
     let chart = null;
     let chartInitialized = false;
 
+    const SERIES_NAMES = ['Water Level (cm)', 'Humidity (%RH)', 'Temperature (°C)'];
+
+    function extractSeries(chartData) {
+        return {
+            categories: chartData.map(d => d.time),
+            waterLevels: chartData.map(d => parseFloat(d.water_level) || 0),
+            humidities:  chartData.map(d => parseFloat(d.humidity)    || 0),
+            temps:       chartData.map(d => parseFloat(d.temp)        || 0),
+        };
+    }
+
     function buildChartOptions(chartData) {
         const isMobile = window.innerWidth < 768;
-        const categories = chartData.map(d => d.time);
-        const waterLevels = chartData.map(d => parseFloat(d.water_level) || 0);
-        const humidities  = chartData.map(d => parseFloat(d.humidity) || 0);
-        const temps       = chartData.map(d => parseFloat(d.temp) || 0);
+        const { categories, waterLevels, humidities, temps } = extractSeries(chartData);
 
         return {
             series: [
-                { name: 'Water Level (cm)', type: 'area', data: waterLevels },
-                { name: 'Humidity (%RH)',   type: 'line', data: humidities  },
-                { name: 'Temperature (°C)', type: 'line', data: temps       },
+                { name: SERIES_NAMES[0], data: waterLevels },
+                { name: SERIES_NAMES[1], data: humidities  },
+                { name: SERIES_NAMES[2], data: temps       },
             ],
             chart: {
                 height: isMobile ? 260 : 300,
                 type: 'line',
                 toolbar: { show: false },
-                animations: { enabled: true, easing: 'easeinout', speed: 500, dynamicAnimation: { enabled: true, speed: 500 } },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 400,
+                    dynamicAnimation: { enabled: true, speed: 400 },
+                },
                 background: 'transparent',
             },
-            stroke: { curve: 'smooth', width: [3, 2.5, 2.5], dashArray: [0, 4, 4] },
+            stroke: {
+                curve: 'smooth',
+                // First series uses area-style fill but still draws as line
+                width: [3, 2.5, 2.5],
+                dashArray: [0, 5, 5],
+            },
             fill: {
+                // Area fill only for the first series (Water Level)
                 type: ['gradient', 'solid', 'solid'],
-                gradient: { shadeIntensity: 1, opacityFrom: 0.28, opacityTo: 0.02, stops: [0, 90, 100] },
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.25,
+                    opacityTo: 0.02,
+                    stops: [0, 90, 100],
+                },
             },
             colors: ['#0284c7', '#7c3aed', '#f97316'],
             markers: { size: [4, 3, 3], strokeWidth: 2, strokeColors: '#fff' },
             xaxis: {
                 categories,
-                labels: { rotate: 0, style: { colors: '#64748b', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+                tickAmount: isMobile ? 5 : 8,
+                labels: {
+                    rotate: -30,
+                    rotateAlways: false,
+                    style: { colors: '#64748b', fontSize: '10px', fontFamily: 'JetBrains Mono' },
+                },
             },
             yaxis: [
                 {
+                    seriesName: SERIES_NAMES[0],
                     title: { text: isMobile ? '' : 'Water Level (cm)', style: { color: '#0284c7', fontSize: '11px' } },
-                    labels: { style: { colors: '#0284c7', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+                    labels: {
+                        style: { colors: '#0284c7', fontSize: '11px', fontFamily: 'JetBrains Mono' },
+                        formatter: val => val.toFixed(1),
+                    },
                     min: 0, max: 250,
                 },
                 {
+                    seriesName: SERIES_NAMES[1],
                     opposite: true,
-                    title: { text: isMobile ? '' : 'Humidity (%) & Temp (°C)', style: { color: '#7c3aed', fontSize: '11px' } },
-                    labels: { style: { colors: '#7c3aed', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+                    title: { text: isMobile ? '' : 'Humidity (%RH)', style: { color: '#7c3aed', fontSize: '11px' } },
+                    labels: {
+                        style: { colors: '#7c3aed', fontSize: '11px', fontFamily: 'JetBrains Mono' },
+                        formatter: val => val.toFixed(0) + '%',
+                    },
                     min: 0, max: 100,
                 },
-                { show: false, min: 0, max: 60 },
+                {
+                    seriesName: SERIES_NAMES[2],
+                    opposite: true,
+                    show: false,
+                    min: 0, max: 60,
+                },
             ],
             annotations: {
                 yaxis: [
@@ -597,8 +639,18 @@
                     { y: 190, borderColor: '#f59e0b', label: { borderColor: '#f59e0b', style: { color: '#fff', background: '#f59e0b', fontSize: '10px' }, text: 'Standby (>190cm)' } },
                 ],
             },
-            legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '11px' },
-            tooltip: { shared: true, intersect: false, theme: 'light', style: { fontSize: '11px', fontFamily: 'Poppins' } },
+            legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '11px', fontFamily: 'Poppins' },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                theme: 'light',
+                style: { fontSize: '11px', fontFamily: 'Poppins' },
+                y: [
+                    { formatter: val => val?.toFixed(1) + ' cm'  },
+                    { formatter: val => val?.toFixed(0) + '% RH' },
+                    { formatter: val => val?.toFixed(1) + ' °C'  },
+                ],
+            },
             grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
         };
     }
@@ -615,20 +667,15 @@
         }
 
         if (chartInitialized && chart) {
-            // ✅ SAFE DATA UPDATE — no DOM destruction, just smooth series update
-            const categories = chartData.map(d => d.time);
-            const waterLevels = chartData.map(d => parseFloat(d.water_level) || 0);
-            const humidities  = chartData.map(d => parseFloat(d.humidity) || 0);
-            const temps       = chartData.map(d => parseFloat(d.temp) || 0);
-
+            // ✅ Data-only update — series names preserved, no DOM destruction
+            const { categories, waterLevels, humidities, temps } = extractSeries(chartData);
             chart.updateOptions({ xaxis: { categories } }, false, false, false);
             chart.updateSeries([
-                { data: waterLevels },
-                { data: humidities  },
-                { data: temps       },
+                { name: SERIES_NAMES[0], data: waterLevels },
+                { name: SERIES_NAMES[1], data: humidities  },
+                { name: SERIES_NAMES[2], data: temps       },
             ], true);
         } else {
-            // ✅ FIRST RENDER — initialize the chart
             el.innerHTML = '';
             chart = new ApexCharts(el, buildChartOptions(chartData));
             chart.render().then(() => { chartInitialized = true; });
@@ -636,11 +683,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial render with SSR data
         renderChart(@json($recent10Readings));
 
-        // ✅ Listen to Livewire event (dispatched from AIAnalytics::render())
-        // This updates chart data WITHOUT touching the wire:ignore DOM
         window.addEventListener('chartDataUpdated', function (e) {
             const newData = e.detail?.chartData ?? (Array.isArray(e.detail) ? e.detail : []);
             renderChart(newData);
@@ -648,10 +692,12 @@
 
         window.addEventListener('resize', () => {
             if (chart && chartInitialized) {
-                chart.updateOptions(buildChartOptions(@json($recent10Readings)));
+                chart.updateOptions({ chart: { height: window.innerWidth < 768 ? 260 : 300 } });
             }
         });
     });
 })();
 </script>
 @endpush
+
+

@@ -127,7 +127,7 @@ class AiAnalytics extends Component
             ->get()
             ->reverse()
             ->map(fn($r) => [
-                'time'        => $r->created_at->format('H:i'),
+                'time'        => $r->created_at->format('H:i:s'),
                 'water_level' => round(200 - (float) $r->distance_cm, 1),
                 'distance'    => (float) $r->distance_cm,
                 'temp'        => (float) ($r->temperature_c ?? 0),
