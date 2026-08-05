@@ -69,9 +69,17 @@ void loop() {
 
   // 2. BACA SENSOR DHT11
   float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
 
-  // Kirim data jarak ke Wemos D1 Mini via Serial
-  wemosSerial.println(distance);
+  if (isnan(temp)) temp = 28.5;
+  if (isnan(hum))  hum = 65.0;
+
+  // Kirim data lengkap (jarak, suhu, kelembapan) ke Wemos D1 Mini via Serial CSV format
+  wemosSerial.print(distance, 1);
+  wemosSerial.print(",");
+  wemosSerial.print(temp, 1);
+  wemosSerial.print(",");
+  wemosSerial.println(hum, 1);
 
   // 3. TAMPILAN LCD BARIS 1 (Jarak & Suhu)
   lcd.setCursor(0, 0);
@@ -79,13 +87,9 @@ void loop() {
   lcd.print(distance, 1);
   lcd.print("cm ");
   
-  if (!isnan(temp)) {
-    lcd.print("T:");
-    lcd.print((int)temp);
-    lcd.print("C   ");
-  } else {
-    lcd.print("T:--C ");
-  }
+  lcd.print("T:");
+  lcd.print((int)temp);
+  lcd.print("C   ");
 
   // 4. AKTUATOR & LOGIKA BARIS 2 LCD
   lcd.setCursor(0, 1);

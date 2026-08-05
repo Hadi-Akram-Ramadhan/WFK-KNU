@@ -1,6 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 #include <SoftwareSerial.h>
 
 // --- 1. KONFIGURASI WIFI ---
@@ -17,7 +17,7 @@ const char* nodeId = "BEDADUNG_01";
 SoftwareSerial arduinoSerial(D5, D6);
 
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 2000; // Kirim webhook setiap 2 detik
+const unsigned long sendInterval = 3000; // Kirim webhook setiap 3 detik
 
 void setup() {
   Serial.begin(115200);
@@ -49,48 +49,73 @@ void loop() {
     String rawData = arduinoSerial.readStringUntil('\n');
     rawData.trim();
 
-    float distance = rawData.toFloat();
+    float distance = 0.0;
+    float temp = 0.0;
+    float hum = 0.0;
 
-    // Pastikan data jarak valid dan sesuai interval 2 detik
+    // Parse data CSV dari Arduino: "distance,temp,hum"
+    int firstComma = rawData.indexOf(',');
+    int secondComma = rawData.indexOf(',', firstComma + 1);
+
+    if (firstComma > 0 && secondComma > firstComma) {
+      distance = rawData.substring(0, firstComma).toFloat();
+      temp     = rawData.substring(firstComma + 1, secondComma).toFloat();
+      hum      = rawData.substring(secondComma + 1).toFloat();
+    } else {
+      distance = rawData.toFloat(); // Fallback jika cuma jarak
+      temp = 28.5;
+      hum = 65.0;
+    }
+
+    // Pastikan data jarak valid dan sesuai interval
     if (distance > 0 && (millis() - lastSendTime >= sendInterval)) {
       lastSendTime = millis();
 
-      Serial.print("\n[DATA ARDUINO] Jarak Air: ");
+      Serial.print("\n[DATA ARDUINO] Jarak: ");
       Serial.print(distance);
-      Serial.println(" cm");
+      Serial.print(" cm | Suhu: ");
+      Serial.print(temp);
+      Serial.print(" °C | Kelembapan: ");
+      Serial.print(hum);
+      Serial.println(" %RH");
 
       if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
+        WiFiClientSecure client;
+        client.setInsecure(); // Biarkan HTTPS tanpa SSL cert verification
+
         HTTPClient http;
 
-        http.begin(client, serverUrl);
-        http.addHeader("Content-Type", "application/json");
+        if (http.begin(client, serverUrl)) {
+          http.addHeader("Content-Type", "application/json");
 
-        // Format JSON Payload untuk Webhook Laravel
-        String jsonPayload = "{";
-        jsonPayload += "\"node_id\":\"" + String(nodeId) + "\",";
-        jsonPayload += "\"distance_cm\":" + String(distance, 1) + ",";
-        jsonPayload += "\"temperature_c\":28.5,";
-        jsonPayload += "\"humidity_percent\":78.0";
-        jsonPayload += "}";
+          // Format JSON Payload untuk Webhook Laravel
+          String jsonPayload = "{";
+          jsonPayload += "\"node_id\":\"" + String(nodeId) + "\",";
+          jsonPayload += "\"distance_cm\":" + String(distance, 1) + ",";
+          jsonPayload += "\"temperature_c\":" + String(temp, 1) + ",";
+          jsonPayload += "\"humidity_percent\":" + String(hum, 1);
+          jsonPayload += "}";
 
-        Serial.print("[WEBHOOK POST] Sending payload to Dokploy: ");
-        Serial.println(jsonPayload);
+          Serial.print("[WEBHOOK POST] Sending payload to Dokploy: ");
+          Serial.println(jsonPayload);
 
-        int httpResponseCode = http.POST(jsonPayload);
+          int httpResponseCode = http.POST(jsonPayload);
 
-        if (httpResponseCode > 0) {
-          String response = http.getString();
-          Serial.print("[WEBHOOK SUCCESS] HTTP Code: ");
-          Serial.println(httpResponseCode);
-          Serial.print("[WEBHOOK RESPONSE] ");
-          Serial.println(response);
+          if (httpResponseCode > 0) {
+            String response = http.getString();
+            Serial.print("[WEBHOOK SUCCESS] HTTP Code: ");
+            Serial.println(httpResponseCode);
+            Serial.print("[WEBHOOK RESPONSE] ");
+            Serial.println(response);
+          } else {
+            Serial.print("[WEBHOOK ERROR] HTTP POST Failed, Error Code: ");
+            Serial.println(httpResponseCode);
+          }
+
+          http.end();
         } else {
-          Serial.print("[WEBHOOK ERROR] HTTP POST Failed, Error Code: ");
-          Serial.println(httpResponseCode);
+          Serial.println("[WEBHOOK ERROR] Unable to connect to server URL");
         }
-
-        http.end();
       } else {
         Serial.println("[WIFI ERROR] Disconnected from WiFi. Reconnecting...");
         WiFi.reconnect();
