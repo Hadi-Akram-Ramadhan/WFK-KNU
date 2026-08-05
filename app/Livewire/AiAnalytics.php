@@ -172,6 +172,7 @@ class AiAnalytics extends Component
     public function render()
     {
         $this->loadData();
+        $this->dispatch('chartDataUpdated', chartData: $this->recent10Readings);
         return view('livewire.ai-analytics');
     }
 }

@@ -364,15 +364,18 @@
         <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
             <div>
                 <h2 class="text-sm font-bold text-slate-900">Multi-Sensor Trend Chart</h2>
-                <p class="text-xs text-slate-400 mt-0.5">Water level, humidity & temperature — last 10 readings</p>
+                <p class="text-xs text-slate-400 mt-0.5">Water level, humidity &amp; temperature — last 10 readings</p>
             </div>
             <div class="flex gap-3 text-[10px] font-semibold">
                 <span class="flex items-center gap-1.5 text-sky-600"><span class="w-3 h-0.5 bg-sky-500 rounded inline-block"></span>Water</span>
-                <span class="flex items-center gap-1.5 text-violet-600"><span class="w-3 h-0.5 bg-violet-500 rounded inline-block border-dashed"></span>Humidity</span>
+                <span class="flex items-center gap-1.5 text-violet-600"><span class="w-3 h-0.5 bg-violet-500 rounded inline-block"></span>Humidity</span>
                 <span class="flex items-center gap-1.5 text-orange-500"><span class="w-3 h-0.5 bg-orange-400 rounded inline-block"></span>Temp</span>
             </div>
         </div>
-        <div id="sfewsApexChart" class="w-full min-h-72"></div>
+        {{-- wire:ignore prevents Livewire re-renders from destroying the ApexCharts instance --}}
+        <div wire:ignore>
+            <div id="sfewsApexChart" class="w-full min-h-72"></div>
+        </div>
     </div>
 
     {{-- ═══════════════════════════════════════════════════════════════ --}}
@@ -539,123 +542,116 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let chart = null;
+(function () {
+    let chart = null;
+    let chartInitialized = false;
 
-        function initOrUpdateChart() {
-            const chartData = @json($recent10Readings);
-            const el = document.querySelector("#sfewsApexChart");
-            if (!el) return;
+    function buildChartOptions(chartData) {
+        const isMobile = window.innerWidth < 768;
+        const categories = chartData.map(d => d.time);
+        const waterLevels = chartData.map(d => parseFloat(d.water_level) || 0);
+        const humidities  = chartData.map(d => parseFloat(d.humidity) || 0);
+        const temps       = chartData.map(d => parseFloat(d.temp) || 0);
 
-            if (!chartData || chartData.length === 0) {
-                el.innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-slate-400 text-sm"><span class="material-symbols-outlined text-4xl mb-2">sensors_off</span>Connect sensor hardware to display chart data.</div>';
-                return;
-            }
-
-            const isMobile = window.innerWidth < 768;
-            const categories = chartData.map(d => d.time);
-            const waterLevels = chartData.map(d => d.water_level);
-            const humidities = chartData.map(d => d.humidity);
-            const temps = chartData.map(d => d.temp);
-
-            const options = {
-                series: [
-                    { name: 'Water Level (cm)', type: 'area', data: waterLevels },
-                    { name: 'Humidity (%RH)', type: 'line', data: humidities },
-                    { name: 'Temperature (°C)', type: 'line', data: temps },
-                ],
-                chart: {
-                    height: isMobile ? 260 : 300,
-                    type: 'line',
-                    toolbar: { show: false },
-                    animations: { enabled: true, easing: 'easeinout', speed: 500 },
-                    background: 'transparent',
+        return {
+            series: [
+                { name: 'Water Level (cm)', type: 'area', data: waterLevels },
+                { name: 'Humidity (%RH)',   type: 'line', data: humidities  },
+                { name: 'Temperature (°C)', type: 'line', data: temps       },
+            ],
+            chart: {
+                height: isMobile ? 260 : 300,
+                type: 'line',
+                toolbar: { show: false },
+                animations: { enabled: true, easing: 'easeinout', speed: 500, dynamicAnimation: { enabled: true, speed: 500 } },
+                background: 'transparent',
+            },
+            stroke: { curve: 'smooth', width: [3, 2.5, 2.5], dashArray: [0, 4, 4] },
+            fill: {
+                type: ['gradient', 'solid', 'solid'],
+                gradient: { shadeIntensity: 1, opacityFrom: 0.28, opacityTo: 0.02, stops: [0, 90, 100] },
+            },
+            colors: ['#0284c7', '#7c3aed', '#f97316'],
+            markers: { size: [4, 3, 3], strokeWidth: 2, strokeColors: '#fff' },
+            xaxis: {
+                categories,
+                labels: { rotate: 0, style: { colors: '#64748b', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+            },
+            yaxis: [
+                {
+                    title: { text: isMobile ? '' : 'Water Level (cm)', style: { color: '#0284c7', fontSize: '11px' } },
+                    labels: { style: { colors: '#0284c7', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+                    min: 0, max: 250,
                 },
-                stroke: {
-                    curve: 'smooth',
-                    width: [3, 2.5, 2.5],
-                    dashArray: [0, 4, 4],
+                {
+                    opposite: true,
+                    title: { text: isMobile ? '' : 'Humidity (%) & Temp (°C)', style: { color: '#7c3aed', fontSize: '11px' } },
+                    labels: { style: { colors: '#7c3aed', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
+                    min: 0, max: 100,
                 },
-                fill: {
-                    type: ['gradient', 'solid', 'solid'],
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.28,
-                        opacityTo: 0.02,
-                        stops: [0, 90, 100],
-                    },
-                },
-                colors: ['#0284c7', '#7c3aed', '#f97316'],
-                markers: { size: [4, 3, 3], strokeWidth: 2, strokeColors: '#fff' },
-                xaxis: {
-                    categories,
-                    labels: {
-                        rotate: 0,
-                        style: { colors: '#64748b', fontSize: '11px', fontFamily: 'JetBrains Mono' },
-                    },
-                },
+                { show: false, min: 0, max: 60 },
+            ],
+            annotations: {
                 yaxis: [
-                    {
-                        title: { text: isMobile ? '' : 'Water Level (cm)', style: { color: '#0284c7', fontSize: '11px' } },
-                        labels: { style: { colors: '#0284c7', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
-                        min: 0, max: 250,
-                    },
-                    {
-                        opposite: true,
-                        title: { text: isMobile ? '' : 'Humidity (%) & Temp (°C)', style: { color: '#7c3aed', fontSize: '11px' } },
-                        labels: { style: { colors: '#7c3aed', fontSize: '11px', fontFamily: 'JetBrains Mono' } },
-                        min: 0, max: 100,
-                    },
-                    { show: false, min: 0, max: 60 },
+                    { y: 210, borderColor: '#f43f5e', label: { borderColor: '#f43f5e', style: { color: '#fff', background: '#f43f5e', fontSize: '10px' }, text: 'Danger (>210cm)' } },
+                    { y: 190, borderColor: '#f59e0b', label: { borderColor: '#f59e0b', style: { color: '#fff', background: '#f59e0b', fontSize: '10px' }, text: 'Standby (>190cm)' } },
                 ],
-                annotations: {
-                    yaxis: [
-                        {
-                            y: 210,
-                            borderColor: '#f43f5e',
-                            label: {
-                                borderColor: '#f43f5e',
-                                style: { color: '#fff', background: '#f43f5e', fontSize: '10px' },
-                                text: 'Danger (>210cm)',
-                            },
-                        },
-                        {
-                            y: 190,
-                            borderColor: '#f59e0b',
-                            label: {
-                                borderColor: '#f59e0b',
-                                style: { color: '#fff', background: '#f59e0b', fontSize: '10px' },
-                                text: 'Standby (>190cm)',
-                            },
-                        },
-                    ],
-                },
-                legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '11px' },
-                tooltip: {
-                    shared: true,
-                    intersect: false,
-                    theme: 'light',
-                    style: { fontSize: '11px', fontFamily: 'Poppins' },
-                },
-                grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
-            };
+            },
+            legend: { show: true, position: 'top', horizontalAlign: 'right', fontSize: '11px' },
+            tooltip: { shared: true, intersect: false, theme: 'light', style: { fontSize: '11px', fontFamily: 'Poppins' } },
+            grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+        };
+    }
 
-            if (chart) {
-                chart.updateOptions(options);
-            } else {
-                chart = new ApexCharts(el, options);
-                chart.render();
+    function renderChart(chartData) {
+        const el = document.querySelector('#sfewsApexChart');
+        if (!el) return;
+
+        if (!chartData || chartData.length === 0) {
+            if (!chartInitialized) {
+                el.innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-slate-400 text-sm"><span class="material-symbols-outlined text-4xl mb-2">sensors_off</span>Connect sensor hardware to display chart data.</div>';
             }
+            return;
         }
 
-        initOrUpdateChart();
+        if (chartInitialized && chart) {
+            // ✅ SAFE DATA UPDATE — no DOM destruction, just smooth series update
+            const categories = chartData.map(d => d.time);
+            const waterLevels = chartData.map(d => parseFloat(d.water_level) || 0);
+            const humidities  = chartData.map(d => parseFloat(d.humidity) || 0);
+            const temps       = chartData.map(d => parseFloat(d.temp) || 0);
 
-        window.addEventListener('resize', () => initOrUpdateChart());
-        if (window.Livewire) {
-            Livewire.hook('commit', ({ succeed }) => {
-                succeed(() => setTimeout(() => initOrUpdateChart(), 100));
-            });
+            chart.updateOptions({ xaxis: { categories } }, false, false, false);
+            chart.updateSeries([
+                { data: waterLevels },
+                { data: humidities  },
+                { data: temps       },
+            ], true);
+        } else {
+            // ✅ FIRST RENDER — initialize the chart
+            el.innerHTML = '';
+            chart = new ApexCharts(el, buildChartOptions(chartData));
+            chart.render().then(() => { chartInitialized = true; });
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initial render with SSR data
+        renderChart(@json($recent10Readings));
+
+        // ✅ Listen to Livewire event (dispatched from AIAnalytics::render())
+        // This updates chart data WITHOUT touching the wire:ignore DOM
+        window.addEventListener('chartDataUpdated', function (e) {
+            const newData = e.detail?.chartData ?? (Array.isArray(e.detail) ? e.detail : []);
+            renderChart(newData);
+        });
+
+        window.addEventListener('resize', () => {
+            if (chart && chartInitialized) {
+                chart.updateOptions(buildChartOptions(@json($recent10Readings)));
+            }
+        });
     });
+})();
 </script>
 @endpush
