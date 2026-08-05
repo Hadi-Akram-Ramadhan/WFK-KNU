@@ -243,31 +243,43 @@
     </div>
 
     {{-- ── 3. MOBILE BOTTOM NAVIGATION ── --}}
-    <nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-2 bg-slate-900 text-white border-t border-slate-800 shadow-2xl rounded-t-2xl pb-safe">
-        <a href="{{ route('dashboard') }}"
-           class="flex flex-col items-center p-2 rounded-xl text-xs font-medium transition-all
-                  {{ request()->routeIs('dashboard') ? 'text-sky-400 font-semibold' : 'text-slate-400' }}">
-            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('dashboard') ? 'ms-fill' : '' }}">space_dashboard</span>
-            <span class="text-[10px] mt-0.5">Dashboard</span>
-        </a>
-        <a href="{{ route('analytics') }}"
-           class="flex flex-col items-center p-2 rounded-xl text-xs font-medium transition-all
-                  {{ request()->routeIs('analytics') ? 'text-sky-400 font-semibold' : 'text-slate-400' }}">
-            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('analytics') ? 'ms-fill' : '' }}">query_stats</span>
-            <span class="text-[10px] mt-0.5">Analytics</span>
-        </a>
-        <a href="{{ route('map') }}"
-           class="flex flex-col items-center p-2 rounded-xl text-xs font-medium transition-all
-                  {{ request()->routeIs('map') ? 'text-sky-400 font-semibold' : 'text-slate-400' }}">
-            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('map') ? 'ms-fill' : '' }}">location_on</span>
-            <span class="text-[10px] mt-0.5">Map</span>
-        </a>
-        <a href="{{ route('alerts') }}"
-           class="flex flex-col items-center p-2 rounded-xl text-xs font-medium transition-all
-                  {{ request()->routeIs('alerts') ? 'text-rose-400 font-semibold' : 'text-slate-400' }}">
-            <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('alerts') ? 'ms-fill' : '' }}">notifications_active</span>
-            <span class="text-[10px] mt-0.5">Alerts</span>
-        </a>
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-800 shadow-2xl rounded-t-2xl pb-safe"
+         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
+        <div class="grid grid-cols-4 w-full">
+            {{-- Dashboard --}}
+            <a href="{{ route('dashboard') }}"
+               class="flex flex-col items-center justify-center py-3 px-1 transition-all
+                      {{ request()->routeIs('dashboard') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
+                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('dashboard') ? 'ms-fill' : '' }}">space_dashboard</span>
+                <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Dashboard</span>
+            </a>
+            {{-- Analytics --}}
+            <a href="{{ route('analytics') }}"
+               class="flex flex-col items-center justify-center py-3 px-1 transition-all
+                      {{ request()->routeIs('analytics') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
+                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('analytics') ? 'ms-fill' : '' }}">query_stats</span>
+                <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Analytics</span>
+            </a>
+            {{-- Map --}}
+            <a href="{{ route('map') }}"
+               class="flex flex-col items-center justify-center py-3 px-1 transition-all
+                      {{ request()->routeIs('map') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
+                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('map') ? 'ms-fill' : '' }}">location_on</span>
+                <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Map</span>
+            </a>
+            {{-- Alerts --}}
+            <a href="{{ route('alerts') }}"
+               class="flex flex-col items-center justify-center py-3 px-1 transition-all relative
+                      {{ request()->routeIs('alerts') ? 'text-rose-400' : 'text-slate-500 active:text-white' }}">
+                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('alerts') ? 'ms-fill' : '' }}">notifications_active</span>
+                <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Alerts</span>
+                @if($globalAlertCount > 0)
+                    <span class="absolute top-2 right-3 w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                        {{ $globalAlertCount > 9 ? '9+' : $globalAlertCount }}
+                    </span>
+                @endif
+            </a>
+        </div>
     </nav>
 
     <script>
