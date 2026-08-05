@@ -4,8 +4,8 @@
 #include <SoftwareSerial.h>
 
 // --- 1. KONFIGURASI WIFI ---
-const char* ssid     = "NAMA_WIFI_LO";      // Ganti dengan SSID Wi-Fi / Hotspot HP
-const char* password = "PASSWORD_WIFI_LO";  // Ganti dengan Password Wi-Fi
+const char* ssid     = "hadi";      // Ganti dengan SSID Wi-Fi / Hotspot HP
+const char* password = "";  // Ganti dengan Password Wi-Fi
 
 // --- 2. KONFIGURASI WEBHOOK LARAVEL / DOKPLOY ---
 const char* serverUrl = "https://wfk-samasama.hadooyy.my.id/api/sensor/data";
