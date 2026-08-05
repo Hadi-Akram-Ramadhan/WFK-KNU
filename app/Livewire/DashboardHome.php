@@ -83,23 +83,48 @@ class DashboardHome extends Component
                 ->values()
                 ->toArray();
 
-            // Recent Alerts list in English
-            $this->recentAlerts = AIAnalysis::where('sensor_node_id', $this->node->id)
+            // Recent Alerts: build from last sensor readings that are not 'safe',
+            // falling back to AI analyses if available, always showing real data.
+            $alertReadings = SensorReading::where('sensor_node_id', $this->node->id)
+                ->whereIn('status', ['danger', 'caution'])
                 ->latest()
                 ->take(5)
-                ->get()
-                ->map(fn($a) => [
-                    'id'          => $a->id,
-                    'time'        => $a->created_at->format('H:i'),
-                    'title'       => match($a->risk_level) {
-                        'critical', 'high' => 'Danger threshold detected',
-                        'medium'           => 'Standby status detected',
-                        default            => 'River status normal',
+                ->get();
+
+            if ($alertReadings->isNotEmpty()) {
+                $this->recentAlerts = $alertReadings->map(fn($r) => [
+                    'id'         => $r->id,
+                    'time'       => $r->created_at->diffForHumans(),
+                    'title'      => match($r->status) {
+                        'danger'  => '🔴 Danger Level Detected',
+                        'caution' => '🟡 Standby Level Detected',
+                        default   => '🟢 River Status Normal',
                     },
-                    'desc'        => $a->ai_response,
-                    'risk_level'  => $a->risk_level,
-                ])
-                ->toArray();
+                    'desc'       => match($r->status) {
+                        'danger'  => 'Water level at ' . number_format(200 - $r->distance_cm, 1) . ' cm — immediate evacuation may be required.',
+                        'caution' => 'Water level at ' . number_format(200 - $r->distance_cm, 1) . ' cm — continuous monitoring advised.',
+                        default   => 'Water level at ' . number_format(200 - $r->distance_cm, 1) . ' cm, river flow is normal.',
+                    },
+                    'risk_level' => $r->status,
+                ])->toArray();
+            } else {
+                // Fallback: show last 5 readings of any status
+                $this->recentAlerts = SensorReading::where('sensor_node_id', $this->node->id)
+                    ->latest()
+                    ->take(5)
+                    ->get()
+                    ->map(fn($r) => [
+                        'id'         => $r->id,
+                        'time'       => $r->created_at->diffForHumans(),
+                        'title'      => match($r->status) {
+                            'danger'  => '🔴 Danger Level Detected',
+                            'caution' => '🟡 Standby Level Detected',
+                            default   => '🟢 River Status Normal',
+                        },
+                        'desc'       => 'Water level: ' . number_format(200 - $r->distance_cm, 1) . ' cm | Humidity: ' . number_format($r->humidity_percent ?? 0, 0) . '% | Temp: ' . number_format($r->temperature_c ?? 0, 1) . '°C',
+                        'risk_level' => $r->status,
+                    ])->toArray();
+            }
         }
     }
 

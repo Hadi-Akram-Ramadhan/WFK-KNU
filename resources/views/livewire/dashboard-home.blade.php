@@ -245,30 +245,52 @@
                 <a href="{{ route('alerts') }}" class="text-xs font-bold text-sky-600 hover:text-sky-700">All</a>
             </div>
 
-            <div class="space-y-3 my-1">
+            <div class="space-y-2.5 my-1 flex-1 overflow-y-auto max-h-72">
                 @forelse($recentAlerts as $alert)
-                <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
-                        {{ $alert['risk_level'] === 'critical' || $alert['risk_level'] === 'high' ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700' }}">
-                        <span class="material-symbols-outlined text-base">warning</span>
+                @php
+                    $alertBg   = match($alert['risk_level']) {
+                        'danger'  => 'bg-rose-50 border-rose-200/70',
+                        'caution' => 'bg-amber-50 border-amber-200/70',
+                        default   => 'bg-emerald-50 border-emerald-200/70',
+                    };
+                    $iconBg    = match($alert['risk_level']) {
+                        'danger'  => 'bg-rose-500 text-white',
+                        'caution' => 'bg-amber-500 text-white',
+                        default   => 'bg-emerald-500 text-white',
+                    };
+                    $icon      = match($alert['risk_level']) {
+                        'danger'  => 'crisis_alert',
+                        'caution' => 'warning',
+                        default   => 'check_circle',
+                    };
+                    $titleColor = match($alert['risk_level']) {
+                        'danger'  => 'text-rose-800',
+                        'caution' => 'text-amber-800',
+                        default   => 'text-emerald-800',
+                    };
+                    $descColor = match($alert['risk_level']) {
+                        'danger'  => 'text-rose-600',
+                        'caution' => 'text-amber-600',
+                        default   => 'text-emerald-600',
+                    };
+                @endphp
+                <div class="p-3 rounded-2xl border {{ $alertBg }} flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 {{ $iconBg }}">
+                        <span class="material-symbols-outlined text-sm ms-fill">{{ $icon }}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold text-slate-800 truncate">{{ $alert['title'] }}</span>
-                            <span class="text-[10px] font-mono text-slate-400 ml-1">{{ $alert['time'] }}</span>
+                        <div class="flex justify-between items-start gap-1">
+                            <span class="text-[11px] font-bold {{ $titleColor }} leading-tight">{{ $alert['title'] }}</span>
+                            <span class="text-[9px] font-mono text-slate-400 flex-shrink-0 mt-0.5">{{ $alert['time'] }}</span>
                         </div>
-                        <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ $alert['desc'] }}</p>
+                        <p class="text-[10px] {{ $descColor }} mt-0.5 leading-snug line-clamp-2">{{ $alert['desc'] }}</p>
                     </div>
                 </div>
                 @empty
-                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0">
-                        <span class="material-symbols-outlined text-base ms-fill">warning</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-amber-900 block">Standby status detected</span>
-                        <p class="text-[11px] text-amber-700 mt-0.5 leading-snug">Water level reached {{ number_format($waterLevelCm, 1) }} cm and needs continuous monitoring.</p>
-                    </div>
+                <div class="flex flex-col items-center justify-center py-8 text-center">
+                    <span class="material-symbols-outlined text-3xl text-slate-300 mb-2">sensors_off</span>
+                    <p class="text-xs text-slate-400 font-medium">No alerts recorded yet.</p>
+                    <p class="text-[10px] text-slate-300 mt-0.5">Connect hardware sensor to start monitoring.</p>
                 </div>
                 @endforelse
             </div>

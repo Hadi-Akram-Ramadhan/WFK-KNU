@@ -45,7 +45,7 @@ void setup() {
   servoGate.attach(SERVO_PIN);
   servoGate.write(0); // Pintu air tertutup rapat di awal
 
-  // LCD Setup
+  // LCD Startup Screen
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
@@ -81,7 +81,7 @@ void loop() {
   wemosSerial.print(",");
   wemosSerial.println(hum, 1);
 
-  // 3. TAMPILAN LCD BARIS 1 (Jarak & Suhu)
+  // 3. LCD LINE 1: Distance & Temperature
   lcd.setCursor(0, 0);
   lcd.print("D:");
   lcd.print(distance, 1);
@@ -91,17 +91,17 @@ void loop() {
   lcd.print((int)temp);
   lcd.print("C   ");
 
-  // 4. AKTUATOR & LOGIKA BARIS 2 LCD
+  // 4. ACTUATOR LOGIC + LCD LINE 2 STATUS
   lcd.setCursor(0, 1);
 
   if (distance < 10.0) { // DANGER MODE (< 10cm)
-    lcd.print("STATUS: DANGER! ");
+    lcd.print("DANGER! EVACUATE");
     
     digitalWrite(LED_YELLOW, LOW);
     digitalWrite(LED_GREEN, LOW);
-    servoGate.write(90);     // Pintu air jebol buka 90 derajat
+    servoGate.write(90);     // Open floodgate 90 degrees
 
-    // KEDIP KENCANG + SIRINE HOROR / NUCLEAR AIR-RAID ALARM
+    // Rapid blink + emergency siren
     digitalWrite(LED_RED, HIGH);
     for (int i = 0; i < 4; i++) {
       tone(BUZZER_PIN, 3800); delay(25);
@@ -114,14 +114,14 @@ void loop() {
       delay(6);
     }
 
-  } else if (distance >= 10.0 && distance <= 20.0) { // CAUTION MODE (10cm - 20cm)
-    lcd.print("STATUS: CAUTION ");
+  } else if (distance >= 10.0 && distance <= 20.0) { // CAUTION MODE (10-20cm)
+    lcd.print("CAUTION! STANDBY");
     
     digitalWrite(LED_RED, LOW);
     digitalWrite(LED_GREEN, LOW);
-    servoGate.write(0);      // Pintu air siaga tetep tutup rapat
+    servoGate.write(0);      // Keep floodgate closed on standby
 
-    // KEDIP PELAN + MELODI WARNING
+    // Slow blink + warning melody
     digitalWrite(LED_YELLOW, HIGH);
     for (int i = 0; i < 6; i++) {
       tone(BUZZER_PIN, yellowMelody[i]);
@@ -130,17 +130,17 @@ void loop() {
     noTone(BUZZER_PIN);
 
     digitalWrite(LED_YELLOW, LOW);
-    delay(400); // Jeda mati 0.4 detik (efek kedip pelan)
+    delay(400); // 0.4s blink pause
 
   } else { // SAFE MODE (> 20cm)
-    lcd.print("STATUS: SAFE    ");
+    lcd.print("SAFE — NORMAL   ");
     
     digitalWrite(LED_RED, LOW);
     digitalWrite(LED_YELLOW, LOW);
     digitalWrite(LED_GREEN, HIGH);
     
     noTone(BUZZER_PIN);
-    servoGate.write(0);      // Pintu air tutup rapat
+    servoGate.write(0);      // Floodgate closed
     delay(300);
   }
 }
