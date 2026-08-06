@@ -17,11 +17,12 @@ const char* nodeId = "BEDADUNG_01";
 SoftwareSerial arduinoSerial(D5, D6);
 
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 3000; // Kirim webhook setiap 3 detik
+const unsigned long sendInterval = 1000; // Kirim webhook setiap 1 detik (Realtime Ultra-fast)
 
 void setup() {
   Serial.begin(115200);
   arduinoSerial.begin(9600);
+  arduinoSerial.setTimeout(100); // Mencegah Serial timeout hanging 1 detik
 
   Serial.println("\n==========================================");
   Serial.println("  BEDADUNG SFEWS — DOKPLOY WEBHOOK BRIDGE ");

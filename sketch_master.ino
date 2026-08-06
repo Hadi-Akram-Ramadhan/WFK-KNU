@@ -67,12 +67,18 @@ void loop() {
   long duration = pulseIn(ECHO_PIN, HIGH);
   float distance = duration * 0.034 / 2.0;
 
-  // 2. BACA SENSOR DHT11
-  float temp = dht.readTemperature();
-  float hum = dht.readHumidity();
+  // 2. BACA SENSOR DHT11 (Non-blocking setiap 2 detik)
+  static unsigned long lastDHTRead = 0;
+  static float temp = 28.5;
+  static float hum = 65.0;
 
-  if (isnan(temp)) temp = 28.5;
-  if (isnan(hum))  hum = 65.0;
+  if (millis() - lastDHTRead >= 2000) {
+    lastDHTRead = millis();
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+    if (!isnan(t)) temp = t;
+    if (!isnan(h)) hum = h;
+  }
 
   // Kirim data lengkap (jarak, suhu, kelembapan) ke Wemos D1 Mini via Serial CSV format
   wemosSerial.print(distance, 1);
@@ -103,15 +109,15 @@ void loop() {
 
     // Rapid blink + emergency siren
     digitalWrite(LED_RED, HIGH);
-    for (int i = 0; i < 4; i++) {
-      tone(BUZZER_PIN, 3800); delay(25);
-      tone(BUZZER_PIN, 2400); delay(25);
+    for (int i = 0; i < 2; i++) {
+      tone(BUZZER_PIN, 3800); delay(15);
+      tone(BUZZER_PIN, 2400); delay(15);
     }
     
     digitalWrite(LED_RED, LOW);
-    for (int hz = 3600; hz >= 800; hz -= 120) {
+    for (int hz = 3600; hz >= 1200; hz -= 240) {
       tone(BUZZER_PIN, hz);
-      delay(6);
+      delay(4);
     }
 
   } else if (distance >= 10.0 && distance <= 20.0) { // CAUTION MODE (10-20cm)
@@ -121,16 +127,12 @@ void loop() {
     digitalWrite(LED_GREEN, LOW);
     servoGate.write(0);      // Keep floodgate closed on standby
 
-    // Slow blink + warning melody
+    // Slow blink
     digitalWrite(LED_YELLOW, HIGH);
-    for (int i = 0; i < 6; i++) {
-      tone(BUZZER_PIN, yellowMelody[i]);
-      delay(noteDurations[i]);
-    }
-    noTone(BUZZER_PIN);
-
+    tone(BUZZER_PIN, 1800, 100);
+    delay(150);
     digitalWrite(LED_YELLOW, LOW);
-    delay(400); // 0.4s blink pause
+    delay(150);
 
   } else { // SAFE MODE (> 20cm)
     lcd.print("SAFE — NORMAL   ");
@@ -141,6 +143,6 @@ void loop() {
     
     noTone(BUZZER_PIN);
     servoGate.write(0);      // Floodgate closed
-    delay(300);
+    delay(100);
   }
 }
