@@ -107,17 +107,17 @@ void loop() {
     digitalWrite(LED_GREEN, LOW);
     servoGate.write(90);     // Open floodgate 90 degrees
 
-    // Rapid blink + emergency siren
+    // Rapid blink + emergency siren (Air-Raid Siren)
     digitalWrite(LED_RED, HIGH);
-    for (int i = 0; i < 2; i++) {
-      tone(BUZZER_PIN, 3800); delay(15);
-      tone(BUZZER_PIN, 2400); delay(15);
+    for (int i = 0; i < 4; i++) {
+      tone(BUZZER_PIN, 3800); delay(25);
+      tone(BUZZER_PIN, 2400); delay(25);
     }
     
     digitalWrite(LED_RED, LOW);
-    for (int hz = 3600; hz >= 1200; hz -= 240) {
+    for (int hz = 3600; hz >= 800; hz -= 120) {
       tone(BUZZER_PIN, hz);
-      delay(4);
+      delay(6);
     }
 
   } else if (distance >= 10.0 && distance <= 20.0) { // CAUTION MODE (10-20cm)
@@ -127,12 +127,16 @@ void loop() {
     digitalWrite(LED_GREEN, LOW);
     servoGate.write(0);      // Keep floodgate closed on standby
 
-    // Slow blink
+    // Slow blink + warning melody
     digitalWrite(LED_YELLOW, HIGH);
-    tone(BUZZER_PIN, 1800, 100);
-    delay(150);
+    for (int i = 0; i < 6; i++) {
+      tone(BUZZER_PIN, yellowMelody[i]);
+      delay(noteDurations[i]);
+    }
+    noTone(BUZZER_PIN);
+
     digitalWrite(LED_YELLOW, LOW);
-    delay(150);
+    delay(200); // 0.2s blink pause
 
   } else { // SAFE MODE (> 20cm)
     lcd.print("SAFE — NORMAL   ");

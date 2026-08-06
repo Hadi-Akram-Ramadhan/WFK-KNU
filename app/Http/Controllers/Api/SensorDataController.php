@@ -94,11 +94,12 @@ class SensorDataController extends Controller
         }
 
         // Dispatch async AI analysis job when danger detected (with 30-second cooldown)
+        // Uses dispatchAfterResponse so HTTP POST response returns INSTANTLY to Wemos (20ms)
         if ($status === 'danger') {
             $lastAnalysisTime = \App\Models\AIAnalysis::where('sensor_node_id', $node->id)->latest()->value('created_at');
             if (!$lastAnalysisTime || \Carbon\Carbon::parse($lastAnalysisTime)->diffInSeconds(now()) >= 30) {
                 try {
-                    AnalyzeFloodDataWithAI::dispatch($reading, 'danger_threshold');
+                    AnalyzeFloodDataWithAI::dispatchAfterResponse($reading, 'danger_threshold');
                 } catch (\Throwable $e) {
                     Log::warning("[API] Could not queue AI job: " . $e->getMessage());
                 }
