@@ -98,9 +98,12 @@ void loop() {
 
       if (WiFi.status() == WL_CONNECTED) {
         WiFiClientSecure client;
-        client.setInsecure(); // Biarkan HTTPS tanpa SSL cert verification
+        client.setInsecure(); // Skip SSL cert verification for speed
+        client.setTimeout(3000);
 
         HTTPClient http;
+        http.setTimeout(3000);
+        http.setReuse(true); // Keep-alive connection to bypass SSL handshake overhead
 
         if (http.begin(client, serverUrl)) {
           http.addHeader("Content-Type", "application/json");
