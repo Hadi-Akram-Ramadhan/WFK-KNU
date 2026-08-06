@@ -23,18 +23,35 @@ void setup() {
   Serial.begin(115200);
   arduinoSerial.begin(9600);
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
   Serial.println("\n==========================================");
   Serial.println("  BEDADUNG SFEWS — DOKPLOY WEBHOOK BRIDGE ");
   Serial.println("==========================================");
+
+  // Clear previous WiFi configuration from ESP flash & set station mode
+  WiFi.persistent(false);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+
+  WiFi.setAutoReconnect(true);
+  WiFi.begin(ssid, password);
+
   Serial.print("Connecting to WiFi: ");
   Serial.println(ssid);
 
+  int retry = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    retry++;
+
+    // Print status hint every 20 retries (10 seconds)
+    if (retry % 20 == 0) {
+      Serial.println();
+      Serial.print("[RETRY] Still connecting to '");
+      Serial.print(ssid);
+      Serial.println("'... Make sure HP Hotspot is set to 2.4 GHz & WPA2!");
+    }
   }
 
   Serial.println("\n[SUCCESS] WiFi Connected!");
