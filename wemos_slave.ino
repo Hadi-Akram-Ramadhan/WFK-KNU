@@ -17,7 +17,7 @@ const char* nodeId = "BEDADUNG_01";
 SoftwareSerial arduinoSerial(D5, D6);
 
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 5000; // Kirim webhook setiap 5 detik (Pas 5 Detik)
+const unsigned long sendInterval = 1500; // Fast webhook telemetry transmission every 1.5s
 
 void setup() {
   Serial.begin(115200);
