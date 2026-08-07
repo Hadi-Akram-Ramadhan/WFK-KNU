@@ -210,7 +210,7 @@ PROMPT;
     }
 
     /**
-     * Generate an official 24-Hour Hydrological & Safety Summary Report for Village Citizens & Local Officials
+     * Generate an official 24-Hour Hydrological & Safety Summary Report in English for International / Joint Research
      */
     public function generateExecutiveReport(SensorNode $node): array
     {
@@ -241,35 +241,35 @@ PROMPT;
             $cautionCount  = 0;
         }
 
-        $overallRisk = $dangerCount > 0 ? 'BAHAYA / DARURAT' : ($cautionCount > 5 ? 'WASPADA / SIAGA' : 'AMAN & STABIL');
+        $overallRisk = $dangerCount > 0 ? 'CRITICAL / DANGER' : ($cautionCount > 5 ? 'ELEVATED / WARNING' : 'STABLE / NORMAL');
 
         $prompt = <<<PROMPT
-Buatkan Laporan Ringkasan Keselamatan Sungai Bedadung untuk Warga Desa & Perangkat Desa:
-Pos Pemantauan: {$node->name} ({$node->node_id})
-Waktu Pemantauan: 24 Jam Terakhir
-Total Data Sensor: {$totalReadings}
-Ketinggian Air Tertinggi: {$maxWaterLevel} cm
-Ketinggian Air Terendah: {$minWaterLevel} cm
-Rata-rata Ketinggian Air: {$avgWaterLevel} cm
-Rata-rata Kelembapan Udara: {$avgHumidity}% RH
-Rata-rata Suhu: {$avgTemp} °C
-Jumlah Peringatan Bahaya: {$dangerCount} kali
-Jumlah Peringatan Waspada: {$cautionCount} kali
-Status Keseluruhan: {$overallRisk}
+Generate an official 24-Hour Hydrological & Flood Risk Executive Report:
+Station: {$node->name} ({$node->node_id})
+Observation Period: Last 24 Hours
+Total Telemetry Logs: {$totalReadings}
+Peak Water Level: {$maxWaterLevel} cm
+Min Water Level: {$minWaterLevel} cm
+Average Water Level: {$avgWaterLevel} cm
+Average Relative Humidity: {$avgHumidity}% RH
+Average Temperature: {$avgTemp} °C
+Danger Alerts Count: {$dangerCount}
+Caution Alerts Count: {$cautionCount}
+Overall Status: {$overallRisk}
 
-PENTING: Tuliskan respons menggunakan Bahasa Indonesia yang ramah, jelas, sederhana, dan mudah dipahami warga desa dalam format JSON persis seperti berikut:
+IMPORTANT: Write the response in clear, professional, easy-to-read English in strict valid JSON format:
 {
-  "title": "Laporan Ringkasan Keselamatan Sungai & Potensi Banjir (24 Jam)",
-  "summary": "<Tuliskan 3-4 kalimat ringkasan kondisi sungai dan cuaca dalam bahasa Indonesia yang sangat mudah dipahami warga desa>",
+  "title": "24-Hour Hydrological & Flood Risk Executive Report",
+  "summary": "<A 3-4 sentence concise executive summary evaluating river stability, rain patterns, and community flood safety in English>",
   "key_findings": [
-    "<Catatan 1 mengenai puncak ketinggian air sungai>",
-    "<Catatan 2 mengenai kondisi kelembapan dan potensi hujan>",
-    "<Catatan 3 mengenai kondisi perangkat sensor IoT>"
+    "<Finding 1 regarding peak water level or surge trend in English>",
+    "<Finding 2 regarding atmospheric humidity & upstream rain potential in English>",
+    "<Finding 3 regarding hardware telemetry reliability in English>"
   ],
   "disaster_directives": [
-    "<Imbauan 1 untuk keselamatan warga desa di bantaran sungai>",
-    "<Imbauan 2 mengenai kesiapsiagaan dokumen/barang berharga>",
-    "<Imbauan 3 mengenai kontak darurat perangkat desa/BPBD>"
+    "<Directive 1 for riverbank community safety in English>",
+    "<Directive 2 for personal emergency preparedness in English>",
+    "<Directive 3 for emergency contacts & disaster management in English>"
   ]
 }
 PROMPT;
@@ -281,7 +281,7 @@ PROMPT;
                     'stream'  => false,
                     'options' => ['num_predict' => 350, 'temperature' => 0.1],
                     'messages' => [
-                        ['role' => 'system', 'content' => 'Anda adalah petugas pos pemantau banjir Sungai Bedadung. Berikan laporan dalam Bahasa Indonesia yang sederhana, jelas, ramah warga desa, dan gunakan format JSON murni.'],
+                        ['role' => 'system', 'content' => 'You are an expert hydrological analyst for Bedadung SFEWS. Respond ONLY in clear, concise English using strict valid JSON.'],
                         ['role' => 'user',   'content' => $prompt],
                     ],
                 ]);
@@ -296,7 +296,7 @@ PROMPT;
 
                 if ($parsed && isset($parsed['summary'])) {
                     return [
-                        'title'               => $parsed['title'] ?? 'Laporan Ringkasan Keselamatan Sungai & Potensi Banjir (24 Jam)',
+                        'title'               => $parsed['title'] ?? '24-Hour Hydrological & Flood Risk Executive Report',
                         'summary'             => $parsed['summary'],
                         'key_findings'        => $parsed['key_findings'] ?? [],
                         'disaster_directives' => $parsed['disaster_directives'] ?? [],
@@ -308,7 +308,7 @@ PROMPT;
                         'danger_count'        => $dangerCount,
                         'caution_count'       => $cautionCount,
                         'overall_risk'        => $overallRisk,
-                        'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d F Y - H:i') . ' WIB',
+                        'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d M Y - H:i') . ' UTC+7',
                         'model_used'          => $this->model,
                         'response_time_ms'    => $responseTimeMs,
                     ];
@@ -320,19 +320,19 @@ PROMPT;
 
         $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
 
-        // Fallback report in clear, friendly Indonesian
+        // Fallback report in 100% English
         return [
-            'title'               => 'Laporan Ringkasan Keselamatan Sungai & Potensi Banjir (24 Jam)',
-            'summary'             => "Dalam 24 jam terakhir, aliran Sungai Bedadung berada dalam kondisi {$overallRisk}. Ketinggian air tertinggi yang tercatat mencapai {$maxWaterLevel} cm dengan rata-rata kelembapan udara {$avgHumidity}%. Warga desa di sekitar bantaran sungai dianjurkan tetap tenang namun selalu memperhatikan perkembangan cuaca.",
+            'title'               => '24-Hour Hydrological & Flood Risk Executive Report',
+            'summary'             => "Over the past 24 hours, the Bedadung River telemetry station maintained a {$overallRisk} status. Peak water level reached {$maxWaterLevel} cm with an average atmospheric humidity of {$avgHumidity}%. Riverbank residents and local authorities are advised to stay informed while routine monitoring continues.",
             'key_findings'        => [
-                "Ketinggian air sungai paling tinggi mencapai {$maxWaterLevel} cm dan masih berada di batas aman penampungan sungai.",
-                "Kelembapan udara rata-rata berada di angka {$avgHumidity}%, mengindikasikan kondisi udara cukup lembab dan berpotensi hujan di wilayah hulu.",
-                "Sistem pemantau sensor IoT berjalan lancar dengan mencatat {$totalReadings} titik data telemetry secara terus-menerus.",
+                "Maximum recorded water level reached {$maxWaterLevel} cm, remaining within safe capacity thresholds.",
+                "Relative atmospheric humidity averaged {$avgHumidity}%, indicating moderate moisture levels across the Bedadung catchment area.",
+                "Continuous IoT telemetry stream recorded {$totalReadings} data points with high hardware operational stability.",
             ],
             'disaster_directives' => [
-                'Himbauan Warga Bantaran Sungai: Tetap waspada saat malam hari dan hindari beraktivitas di tepi sungai saat hujan deras.',
-                'Persiapan Mandiri: Simpan berkas penting dan barang elektronik di tempat yang aman dan lebih tinggi.',
-                'Kontak Darurat Desa: Jika melihat luapan air sungai meningkat cepat, segera hubungi Perangkat Desa atau Call Center BPBD Jember (112).',
+                'Riverbank Advisory: Remain vigilant during night hours and avoid riverbank activities during heavy rainfall.',
+                'Personal Preparedness: Secure essential documents and electronic devices on elevated storage.',
+                'Emergency Directives: Immediately contact BPBD Command Center (112) or local authorities if water level surges rapidly.',
             ],
             'max_water_level'     => $maxWaterLevel,
             'min_water_level'     => $minWaterLevel,
@@ -342,7 +342,7 @@ PROMPT;
             'danger_count'        => $dangerCount,
             'caution_count'       => $cautionCount,
             'overall_risk'        => $overallRisk,
-            'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d F Y - H:i') . ' WIB',
+            'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d M Y - H:i') . ' UTC+7',
             'model_used'          => 'AI Hydro Engine v2',
             'response_time_ms'    => $responseTimeMs,
         ];
