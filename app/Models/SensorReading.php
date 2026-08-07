@@ -62,12 +62,12 @@ class SensorReading extends Model
     }
 
     /**
-     * Determine status from distance reading (Plastic Cup Setup: 10cm top, 20cm bottom).
+     * Determine status from distance reading (<=3.0cm is Danger, 3.0-5.0cm Caution, >5.0cm Safe).
      */
     public static function statusFromDistance(float $distanceCm): string
     {
-        if ($distanceCm < 15.0)  return 'danger';
-        if ($distanceCm <= 18.0) return 'caution';
+        if ($distanceCm <= 3.0)  return 'danger';
+        if ($distanceCm <= 5.0)  return 'caution';
         return 'safe';
     }
 
