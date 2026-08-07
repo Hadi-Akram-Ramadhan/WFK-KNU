@@ -100,12 +100,12 @@ void loop() {
   // 4. ACTUATOR LOGIC + LCD LINE 2 STATUS
   lcd.setCursor(0, 1);
 
-  if (distance < 20.0) { // DANGER MODE (< 20cm)
+  if (distance < 8.0) { // DANGER MODE (< 8cm, High water level)
     lcd.print("DANGER! EVACUATE");
     
     digitalWrite(LED_YELLOW, LOW);
     digitalWrite(LED_GREEN, LOW);
-    servoGate.write(180);    // Open floodgate to the LEFT (180 degrees)
+    servoGate.write(90);     // Turn 90 degrees to the left
 
     // Rapid blink + emergency siren (Air-Raid Siren)
     digitalWrite(LED_RED, HIGH);
@@ -120,7 +120,7 @@ void loop() {
       delay(6);
     }
 
-  } else if (distance >= 20.0 && distance <= 35.0) { // CAUTION MODE (20-35cm)
+  } else if (distance >= 8.0 && distance <= 15.0) { // CAUTION MODE (8-15cm)
     lcd.print("CAUTION! STANDBY");
     
     digitalWrite(LED_RED, LOW);
@@ -138,7 +138,7 @@ void loop() {
     digitalWrite(LED_YELLOW, LOW);
     delay(200); // 0.2s blink pause
 
-  } else { // SAFE MODE (> 35cm)
+  } else { // SAFE MODE (> 15cm, Low water level in 20cm setup)
     lcd.print("SAFE — NORMAL   ");
     
     digitalWrite(LED_RED, LOW);

@@ -62,12 +62,12 @@ class SensorReading extends Model
     }
 
     /**
-     * Determine status from distance reading.
+     * Determine status from distance reading (For 20cm max height container setup).
      */
     public static function statusFromDistance(float $distanceCm): string
     {
-        if ($distanceCm < 20.0)  return 'danger';
-        if ($distanceCm <= 35.0) return 'caution';
+        if ($distanceCm < 8.0)  return 'danger';
+        if ($distanceCm <= 15.0) return 'caution';
         return 'safe';
     }
 
@@ -75,7 +75,7 @@ class SensorReading extends Model
      * Convert distance from sensor (cm) to water level height (m).
      * Sensor is mounted at top, measures downward to water surface.
      */
-    public static function distanceToWaterLevel(float $distanceCm, float $sensorHeightCm): float
+    public static function distanceToWaterLevel(float $distanceCm, float $sensorHeightCm = 20.0): float
     {
         $waterLevelCm = max(0, $sensorHeightCm - $distanceCm);
         return round($waterLevelCm / 100, 3);
@@ -83,9 +83,9 @@ class SensorReading extends Model
 
     /**
      * Calculate capacity percentage (0-100%).
-     * 0cm distance = 100% capacity (danger), 30cm+ = 0%.
+     * 0cm distance = 100% capacity (danger), 20cm+ = 0%.
      */
-    public static function distanceToCapacity(float $distanceCm, float $sensorHeightCm = 30.0): float
+    public static function distanceToCapacity(float $distanceCm, float $sensorHeightCm = 20.0): float
     {
         $percent = (($sensorHeightCm - $distanceCm) / $sensorHeightCm) * 100;
         return round(max(0, min(100, $percent)), 2);
