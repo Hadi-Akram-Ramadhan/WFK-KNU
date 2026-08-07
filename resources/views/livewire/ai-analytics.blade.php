@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6" wire:poll.1s>
+<div class="flex flex-col gap-6" wire:poll.5s>
 
     @php
         $hasReading = $hasData ?? false;

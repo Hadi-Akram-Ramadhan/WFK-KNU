@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6 py-4" wire:poll.1s>
+<div class="flex flex-col gap-6 py-4" wire:poll.5s>
     <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Hardware Control & Actuators</h1>
         <p class="text-slate-500 text-sm font-normal mt-1">Settings for floodgate servo position, emergency siren, and edge control logs</p>
