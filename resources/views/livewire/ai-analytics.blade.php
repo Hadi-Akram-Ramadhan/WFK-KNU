@@ -368,20 +368,20 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-slate-800/80 relative z-10">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
-                        AI Executive Feature
+                    <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold uppercase tracking-wider">
+                        Fitur Laporan Warga & Perangkat Desa
                     </span>
-                    <span class="text-xs text-slate-400 font-mono">Hydro Engine v2</span>
+                    <span class="text-xs text-slate-400 font-mono">Pos Bedadung v2</span>
                 </div>
-                <h2 class="text-lg font-extrabold text-white tracking-tight mt-1">24-Hour AI Hydrological Executive Report</h2>
-                <p class="text-xs text-slate-400 mt-0.5">Automated deep-learning risk synthesis for BPBD Jember disaster management</p>
+                <h2 class="text-lg font-extrabold text-white tracking-tight mt-1">Laporan AI Keselamatan Sungai & Warga Desa (24 Jam)</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Ringkasan kondisi air sungai dan himbauan keselamatan untuk warga desa & BPBD</p>
             </div>
 
             <div class="flex items-center gap-2">
                 @if($execReport)
-                <button onclick="window.print()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all border border-slate-700">
-                    <span class="material-symbols-outlined text-sm">print</span>
-                    Print / PDF
+                <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    Unduh PDF / Cetak Laporan
                 </button>
                 @endif
 
@@ -389,43 +389,50 @@
                         class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-900/30 disabled:opacity-50">
                     <span wire:loading.remove wire:target="generateReport" class="material-symbols-outlined text-base">auto_awesome</span>
                     <span wire:loading wire:target="generateReport" class="animate-spin material-symbols-outlined text-base">sync</span>
-                    <span>{{ $execReport ? 'Regenerate Report' : 'Generate Executive Report' }}</span>
+                    <span>{{ $execReport ? 'Buat Ulang Laporan' : 'Buat Laporan AI Warga' }}</span>
                 </button>
             </div>
         </div>
 
         @if($execReport)
-        <div class="mt-6 space-y-6 relative z-10 animate-fade-in">
+        <div class="mt-6 space-y-6 relative z-10 animate-fade-in print-content">
+            {{-- Printable Official Header --}}
+            <div class="hidden print-only mb-4 text-center pb-3 border-b-2 border-slate-900">
+                <h1 class="text-lg font-black uppercase tracking-tight text-slate-900">PEMERINTAH KABUPATEN JEMBER — KECAMATAN SUMBERSARI</h1>
+                <h2 class="text-sm font-bold text-slate-700">POS PEMANTAUAN DINI FLOOD EARLY WARNING SYSTEM (SFEWS) SUNGAI BEDADUNG</h2>
+                <p class="text-xs text-slate-500 mt-1">Dicetak Pada: {{ $execReport['generated_at'] }} | Stasiun: Checkpoint Alpha Sumbersari</p>
+            </div>
+
             {{-- 24-Hour Telemetry Key Stat Badges --}}
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Peak Water Level</span>
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Air Tertinggi (24j)</span>
                     <span class="text-lg font-black text-sky-400 font-mono mt-0.5 block">{{ $execReport['max_water_level'] }} cm</span>
                 </div>
                 <div class="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Min Water Level</span>
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Air Terendah (24j)</span>
                     <span class="text-lg font-black text-emerald-400 font-mono mt-0.5 block">{{ $execReport['min_water_level'] }} cm</span>
                 </div>
                 <div class="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Avg Relative Humidity</span>
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Rata-Rata Kelembapan</span>
                     <span class="text-lg font-black text-violet-400 font-mono mt-0.5 block">{{ $execReport['avg_humidity'] }}% RH</span>
                 </div>
                 <div class="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">24h Overall Risk Status</span>
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Status Risiko Sungai</span>
                     <span class="text-base font-black uppercase font-mono mt-1 block
-                        {{ $execReport['overall_risk'] === 'CRITICAL' ? 'text-rose-400' : ($execReport['overall_risk'] === 'ELEVATED' ? 'text-amber-400' : 'text-emerald-400') }}">
+                        {{ str_contains($execReport['overall_risk'], 'BAHAYA') ? 'text-rose-400' : (str_contains($execReport['overall_risk'], 'WASPADA') ? 'text-amber-400' : 'text-emerald-400') }}">
                         {{ $execReport['overall_risk'] }}
                     </span>
                 </div>
             </div>
 
             {{-- Executive Summary Narrative Box --}}
-            <div class="p-4 rounded-2xl bg-gradient-to-r from-violet-950/40 to-slate-900/60 border border-violet-800/40">
+            <div class="p-4.5 rounded-2xl bg-gradient-to-r from-violet-950/40 to-slate-900/60 border border-violet-800/40">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="material-symbols-outlined text-violet-400 text-lg">description</span>
-                    <h3 class="text-xs font-bold text-violet-200 uppercase tracking-wider">Executive Hydrological Synthesis</h3>
+                    <h3 class="text-xs font-bold text-violet-200 uppercase tracking-wider">Ringkasan Kondisi Sungai Untuk Warga</h3>
                 </div>
-                <p class="text-xs text-slate-300 leading-relaxed font-sans">
+                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
                     {{ $execReport['summary'] }}
                 </p>
             </div>
@@ -436,12 +443,12 @@
                 <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
                     <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined text-base">insights</span>
-                        Key Telemetry Findings
+                        Catatan Pemantauan Air & Cuaca
                     </h4>
                     <ul class="space-y-2.5">
                         @foreach($execReport['key_findings'] as $finding)
                         <li class="flex items-start gap-2.5 text-xs text-slate-300 leading-normal">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 flex-shrink-0"></span>
+                            <span class="w-2 h-2 rounded-full bg-sky-400 mt-1 flex-shrink-0"></span>
                             <span>{{ $finding }}</span>
                         </li>
                         @endforeach
@@ -452,7 +459,7 @@
                 <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50">
                     <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <span class="material-symbols-outlined text-base">verified_user</span>
-                        Operational & Preparedness Directives
+                        Himbauan Keselamatan Warga Desa
                     </h4>
                     <ul class="space-y-2.5">
                         @foreach($execReport['disaster_directives'] as $idx => $directive)
@@ -469,27 +476,27 @@
 
             {{-- Footer Metadata --}}
             <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-400 gap-2">
-                <span>Generated at: {{ $execReport['generated_at'] }}</span>
-                <span>AI Engine: {{ $execReport['model_used'] }} ({{ $execReport['response_time_ms'] }}ms)</span>
+                <span>Waktu Dibuat: {{ $execReport['generated_at'] }}</span>
+                <span>Mesin AI: {{ $execReport['model_used'] }} ({{ $execReport['response_time_ms'] }}ms)</span>
             </div>
         </div>
         @else
         {{-- Empty / Default CTA Box --}}
         <div class="mt-6 p-6 rounded-2xl bg-slate-800/30 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left relative z-10">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600/30 to-sky-600/30 text-violet-300 flex items-center justify-center flex-shrink-0 border border-violet-500/30">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600/30 to-sky-600/30 text-emerald-300 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
                     <span class="material-symbols-outlined text-2xl">lab_profile</span>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white">Generate Official 24-Hour Executive Report</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Synthesize telemetry peaks, rainfall risk index, and disaster preparedness directives for BPBD.</p>
+                    <h3 class="text-sm font-bold text-white">Buat Laporan Keselamatan Warga Desa (24 Jam)</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Dapatkan laporan ringkasan kondisi sungai dalam Bahasa Indonesia yang sederhana &amp; siap diunduh sebagai PDF.</p>
                 </div>
             </div>
             <button wire:click="generateReport" wire:loading.attr="disabled"
-                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-900/30 whitespace-nowrap">
+                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/30 whitespace-nowrap">
                 <span wire:loading.remove wire:target="generateReport" class="material-symbols-outlined text-base">auto_awesome</span>
                 <span wire:loading wire:target="generateReport" class="animate-spin material-symbols-outlined text-base">sync</span>
-                <span>Generate Report Now</span>
+                <span>Buat Laporan Sekarang</span>
             </button>
         </div>
         @endif

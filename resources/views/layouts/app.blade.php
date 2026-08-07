@@ -94,6 +94,29 @@
         /* Fix Leaflet map z-index overlapping sticky header */
         .leaflet-pane { z-index: 10 !important; }
         .leaflet-top, .leaflet-bottom { z-index: 20 !important; }
+
+        /* PDF Print Stylesheet */
+        @media print {
+            aside, header, nav, button, .no-print {
+                display: none !important;
+            }
+            body, main {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+            .rainova-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
     </style>
 
     {{-- Global JS Guard for Pusher & Echo --}}
