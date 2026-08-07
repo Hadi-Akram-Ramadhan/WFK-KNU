@@ -100,7 +100,7 @@ void loop() {
   // 4. ACTUATOR LOGIC + LCD LINE 2 STATUS
   lcd.setCursor(0, 1);
 
-  if (distance <= 13.0) { // DANGER MODE (<= 13cm)
+  if (distance <= 16.0) { // DANGER MODE (<= 16cm -> EVACUATE)
     lcd.print("DANGER! EVACUATE");
     
     digitalWrite(LED_YELLOW, LOW);
@@ -120,7 +120,7 @@ void loop() {
       delay(6);
     }
 
-  } else if (distance > 13.0 && distance <= 16.0) { // CAUTION MODE (13.0-16.0cm)
+  } else if (distance > 16.0 && distance <= 18.0) { // CAUTION MODE (16.0-18.0cm -> STANDBY)
     lcd.print("CAUTION! STANDBY");
     
     digitalWrite(LED_RED, LOW);
@@ -138,7 +138,7 @@ void loop() {
     digitalWrite(LED_YELLOW, LOW);
     delay(200); // 0.2s blink pause
 
-  } else { // SAFE MODE (> 16cm / Sisanya aman)
+  } else { // SAFE MODE (> 18cm -> NORMAL)
     lcd.print("SAFE — NORMAL   ");
     
     digitalWrite(LED_RED, LOW);
