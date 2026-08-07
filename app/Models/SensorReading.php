@@ -22,12 +22,12 @@ class SensorReading extends Model
     ];
 
     protected $casts = [
-        'distance_cm'          => 'decimal:2',
-        'temperature_c'        => 'decimal:2',
-        'humidity_percent'     => 'decimal:2',
-        'water_level_m'        => 'decimal:3',
+        'distance_cm' => 'decimal:2',
+        'temperature_c' => 'decimal:2',
+        'humidity_percent' => 'decimal:2',
+        'water_level_m' => 'decimal:3',
         'rise_rate_cm_per_min' => 'decimal:4',
-        'capacity_percent'     => 'decimal:2',
+        'capacity_percent' => 'decimal:2',
     ];
 
     public function node(): BelongsTo
@@ -40,11 +40,11 @@ class SensorReading extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
-            'danger'  => 'error',
+        return match ($this->status) {
+            'danger' => 'error',
             'caution' => 'tertiary',
-            'safe'    => 'primary',
-            default   => 'secondary',
+            'safe' => 'primary',
+            default => 'secondary',
         };
     }
 
@@ -53,11 +53,11 @@ class SensorReading extends Model
      */
     public function getStatusEmojiAttribute(): string
     {
-        return match($this->status) {
-            'danger'  => '🚨',
+        return match ($this->status) {
+            'danger' => '🚨',
             'caution' => '⚠️',
-            'safe'    => '✅',
-            default   => '❓',
+            'safe' => '✅',
+            default => '❓',
         };
     }
 
@@ -66,8 +66,10 @@ class SensorReading extends Model
      */
     public static function statusFromDistance(float $distanceCm): string
     {
-        if ($distanceCm < 8.0)  return 'danger';
-        if ($distanceCm <= 15.0) return 'caution';
+        if ($distanceCm < 8.0)
+            return 'danger';
+        if ($distanceCm <= 15.0)
+            return 'caution';
         return 'safe';
     }
 

@@ -27,7 +27,7 @@ class SimulateSensorData extends Command
     public function handle()
     {
         $baseUrl = config('app.url', 'http://127.0.0.1:8000');
-        $token   = env('WEMOS_API_TOKEN', 'bedadung-sfews-secret-token-01');
+        $token = env('WEMOS_API_TOKEN', 'bedadung-sfews-secret-token-01');
 
         $this->info("🌊 Starting SFEWS Local Sensor Simulator...");
         $this->comment("Target URL: {$baseUrl}/api/sensor/data");
@@ -65,7 +65,8 @@ class SimulateSensorData extends Command
 
             while (true) {
                 $val = $this->ask('Jarak sensor ke air (cm)');
-                if (strtolower($val) === 'exit') break;
+                if (strtolower($val) === 'exit')
+                    break;
                 if (!is_numeric($val)) {
                     $this->error('Masukkan angka yang valid!');
                     continue;
@@ -79,14 +80,14 @@ class SimulateSensorData extends Command
 
     private function sendReading(string $baseUrl, string $token, float $distance)
     {
-        $statusLabel = match(true) {
+        $statusLabel = match (true) {
             $distance < 8.0 => '<fg=red>🚨 DANGER</>',
             $distance <= 15.0 => '<fg=yellow>⚠️ CAUTION</>',
             default => '<fg=green>✅ SAFE</>',
         };
 
         $temp = round(27.5 + (rand(-10, 10) / 10), 1);
-        $hum  = round($distance < 8 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 15 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
+        $hum = round($distance < 8 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 15 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
 
         $this->line("SENDING: Distance = {$distance} cm | Suhu = {$temp}°C | Kelembapan = {$hum}% [{$statusLabel}]");
 
@@ -94,10 +95,10 @@ class SimulateSensorData extends Command
             $response = Http::withToken($token)
                 ->timeout(10)
                 ->post("{$baseUrl}/api/sensor/data", [
-                    'node_id'     => 'BEDADUNG_01',
-                    'distance'    => $distance,
+                    'node_id' => 'BEDADUNG_01',
+                    'distance' => $distance,
                     'temperature' => $temp,
-                    'humidity'    => $hum,
+                    'humidity' => $hum,
                 ]);
 
             if ($response->successful()) {
