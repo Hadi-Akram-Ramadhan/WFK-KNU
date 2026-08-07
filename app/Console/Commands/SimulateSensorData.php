@@ -82,12 +82,12 @@ class SimulateSensorData extends Command
     {
         $statusLabel = match (true) {
             $distance < 8.0 => '<fg=red>🚨 DANGER</>',
-            $distance <= 15.0 => '<fg=yellow>⚠️ CAUTION</>',
+            $distance <= 12.0 => '<fg=yellow>⚠️ CAUTION</>',
             default => '<fg=green>✅ SAFE</>',
         };
 
         $temp = round(27.5 + (rand(-10, 10) / 10), 1);
-        $hum = round($distance < 8 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 15 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
+        $hum = round($distance < 8 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 12 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
 
         $this->line("SENDING: Distance = {$distance} cm | Suhu = {$temp}°C | Kelembapan = {$hum}% [{$statusLabel}]");
 

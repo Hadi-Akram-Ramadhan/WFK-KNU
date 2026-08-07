@@ -120,7 +120,7 @@ void loop() {
       delay(6);
     }
 
-  } else if (distance >= 8.0 && distance <= 15.0) { // CAUTION MODE (8-15cm)
+  } else if (distance >= 8.0 && distance <= 12.0) { // CAUTION MODE (8-12cm)
     lcd.print("CAUTION! STANDBY");
     
     digitalWrite(LED_RED, LOW);
@@ -138,7 +138,7 @@ void loop() {
     digitalWrite(LED_YELLOW, LOW);
     delay(200); // 0.2s blink pause
 
-  } else { // SAFE MODE (> 15cm, Low water level in 20cm setup)
+  } else { // SAFE MODE (> 12cm)
     lcd.print("SAFE — NORMAL   ");
     
     digitalWrite(LED_RED, LOW);

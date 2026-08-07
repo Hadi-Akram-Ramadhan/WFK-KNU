@@ -66,10 +66,8 @@ class SensorReading extends Model
      */
     public static function statusFromDistance(float $distanceCm): string
     {
-        if ($distanceCm < 8.0)
-            return 'danger';
-        if ($distanceCm <= 15.0)
-            return 'caution';
+        if ($distanceCm < 8.0)  return 'danger';
+        if ($distanceCm <= 12.0) return 'caution';
         return 'safe';
     }
 
