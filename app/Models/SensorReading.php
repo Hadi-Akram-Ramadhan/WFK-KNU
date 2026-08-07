@@ -62,12 +62,12 @@ class SensorReading extends Model
     }
 
     /**
-     * Determine status from distance reading (<=9.0cm is Danger, 9.0-12.0cm Caution, >12.0cm Safe).
+     * Determine status from distance reading (<=13.0cm is Danger, 13.0-16.0cm Caution, >16.0cm Safe).
      */
     public static function statusFromDistance(float $distanceCm): string
     {
-        if ($distanceCm <= 9.0)  return 'danger';
-        if ($distanceCm <= 12.0) return 'caution';
+        if ($distanceCm <= 13.0)  return 'danger';
+        if ($distanceCm <= 16.0) return 'caution';
         return 'safe';
     }
 
