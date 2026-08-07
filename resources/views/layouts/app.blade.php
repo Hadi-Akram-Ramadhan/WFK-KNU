@@ -313,6 +313,18 @@
                 clockEl.innerText = now.toTimeString().split(' ')[0];
             }
         }, 1000);
+
+        // Auto-refresh page on Livewire 419 Expired / 404 deploy transition without alert popups
+        document.addEventListener('livewire:init', () => {
+            Livewire.hook('request', ({ fail }) => {
+                fail(({ status, preventDefault }) => {
+                    if (status === 419 || status === 404) {
+                        preventDefault();
+                        window.location.reload();
+                    }
+                });
+            });
+        });
     </script>
 
     @livewireScripts
