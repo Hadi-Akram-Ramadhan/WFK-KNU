@@ -201,9 +201,9 @@ PROMPT;
 
     private function calculateProbabilityFallback(float $distCm, float $humidityPercent): int
     {
-        if ($distCm < 8.0) {
+        if ($distCm < 13.0) {
             return (int) min(98, 80 + ($humidityPercent > 85 ? 15 : 5));
-        } elseif ($distCm <= 12.0) {
+        } elseif ($distCm <= 17.0) {
             return (int) min(79, 45 + ($humidityPercent > 80 ? 20 : 10));
         }
         return (int) max(5, min(30, 15 + ($humidityPercent > 85 ? 10 : 0)));

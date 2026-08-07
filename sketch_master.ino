@@ -100,7 +100,7 @@ void loop() {
   // 4. ACTUATOR LOGIC + LCD LINE 2 STATUS
   lcd.setCursor(0, 1);
 
-  if (distance < 8.0) { // DANGER MODE (< 8cm, High water level)
+  if (distance < 13.0) { // DANGER MODE (< 13cm: Air hampir penuh mendekati bibir gelas 10cm)
     lcd.print("DANGER! EVACUATE");
     
     digitalWrite(LED_YELLOW, LOW);
@@ -120,7 +120,7 @@ void loop() {
       delay(6);
     }
 
-  } else if (distance >= 8.0 && distance <= 12.0) { // CAUTION MODE (8-12cm)
+  } else if (distance >= 13.0 && distance <= 17.0) { // CAUTION MODE (13-17cm: Air pertengahan gelas)
     lcd.print("CAUTION! STANDBY");
     
     digitalWrite(LED_RED, LOW);
@@ -138,7 +138,7 @@ void loop() {
     digitalWrite(LED_YELLOW, LOW);
     delay(200); // 0.2s blink pause
 
-  } else { // SAFE MODE (> 12cm)
+  } else { // SAFE MODE (>= 17cm: Gelas kosong / air sangat rendah di dasar gelas)
     lcd.print("SAFE — NORMAL   ");
     
     digitalWrite(LED_RED, LOW);
