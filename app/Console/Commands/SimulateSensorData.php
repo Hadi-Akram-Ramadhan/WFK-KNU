@@ -80,13 +80,13 @@ class SimulateSensorData extends Command
     private function sendReading(string $baseUrl, string $token, float $distance)
     {
         $statusLabel = match(true) {
-            $distance < 5.0 => '<fg=red>🚨 DANGER</>',
-            $distance <= 10.0 => '<fg=yellow>⚠️ CAUTION</>',
+            $distance < 20.0 => '<fg=red>🚨 DANGER</>',
+            $distance <= 35.0 => '<fg=yellow>⚠️ CAUTION</>',
             default => '<fg=green>✅ SAFE</>',
         };
 
         $temp = round(27.5 + (rand(-10, 10) / 10), 1);
-        $hum  = round($distance < 5 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 10 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
+        $hum  = round($distance < 20 ? 88.5 + (rand(-20, 20) / 10) : ($distance <= 35 ? 82.0 + (rand(-15, 15) / 10) : 74.0 + (rand(-15, 15) / 10)), 1);
 
         $this->line("SENDING: Distance = {$distance} cm | Suhu = {$temp}°C | Kelembapan = {$hum}% [{$statusLabel}]");
 
