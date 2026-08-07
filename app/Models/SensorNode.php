@@ -65,10 +65,10 @@ class SensorNode extends Model
     }
 
     /**
-     * Check if node is online (seen in last 2 minutes).
+     * Check if node is online (seen in last 20 seconds).
      */
     public function getIsOnlineAttribute(): bool
     {
-        return $this->last_seen && $this->last_seen->diffInMinutes(now()) <= 2;
+        return $this->last_seen && $this->last_seen->diffInSeconds(now()) <= 20;
     }
 }

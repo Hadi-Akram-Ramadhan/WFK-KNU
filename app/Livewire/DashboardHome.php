@@ -36,7 +36,10 @@ class DashboardHome extends Component
             $this->latestReading = $this->node->latestReading;
             $this->latestAnalysis = $this->node->analyses->first();
 
-            if ($this->latestReading) {
+            // Check if latest reading was received in the last 20 seconds (live stream)
+            $isLive = $this->latestReading && $this->latestReading->created_at->diffInSeconds(now()) <= 20;
+
+            if ($isLive) {
                 $status = $this->latestReading->status;
 
                 $this->statusTitle = match($status) {
@@ -46,9 +49,9 @@ class DashboardHome extends Component
                 };
 
                 $this->statusDesc = match($status) {
-                    'danger'  => 'Critical water level! Residents along the riverbank are advised to prepare for evacuation.',
-                    'caution' => 'Water level is rising, monitor river conditions.',
-                    default   => 'Water level is normal, river flow is smooth.',
+                    'danger'  => 'Critical water level! Immediate evacuation advised along Bedadung stream.',
+                    'caution' => 'Water level is elevated, continuous monitoring recommended.',
+                    default   => 'Water level is normal, smooth river flow.',
                 };
 
                 $humidity = (float) ($this->latestReading->humidity_percent ?? 0);
@@ -60,12 +63,12 @@ class DashboardHome extends Component
                 $dist = (float) $this->latestReading->distance_cm;
                 $this->waterLevelCm = round(200 - $dist, 1);
             } else {
-                $this->statusTitle = 'NO DATA';
-                $this->statusDesc  = 'Awaiting sensor hardware connection. Connect Wemos D1 Mini to start live telemetry.';
-                $this->rainStatus  = 'NO DATA';
+                $this->statusTitle  = 'OFFLINE';
+                $this->statusDesc   = 'Hardware power disconnected. Connect Wemos D1 Mini to resume live telemetry.';
+                $this->rainStatus   = 'OFFLINE';
                 $this->waterLevelCm = null;
-                $this->tempC = null;
-                $this->humidityRH = null;
+                $this->tempC        = null;
+                $this->humidityRH   = null;
             }
 
             // Get last 10 readings for quick chart

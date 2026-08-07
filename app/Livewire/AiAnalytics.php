@@ -65,8 +65,9 @@ class AiAnalytics extends Component
             ->first();
 
         $latest = $this->node->latestReading;
+        $isLive = $latest && $latest->created_at->diffInSeconds(now()) <= 20;
 
-        if ($latest) {
+        if ($isLive) {
             $this->hasData         = true;
             $this->currentStatus   = $latest->status;
             $this->currentDistance = (float) $latest->distance_cm;
@@ -95,13 +96,13 @@ class AiAnalytics extends Component
             }
         } else {
             $this->hasData          = false;
-            $this->currentStatus    = 'no_data';
+            $this->currentStatus    = 'offline';
             $this->waterLevelCm     = null;
             $this->currentTemp      = null;
             $this->currentHumidity  = null;
-            $this->rainStatus       = 'NO DATA';
+            $this->rainStatus       = 'OFFLINE';
             $this->floodProbability = 0;
-            $this->weatherCondition = 'Awaiting live sensor data stream';
+            $this->weatherCondition = 'Hardware Disconnected / Power Off — Awaiting Telemetry Signal';
         }
 
         // Citizen actions from AI analysis or dynamic fallback based on status (English)
