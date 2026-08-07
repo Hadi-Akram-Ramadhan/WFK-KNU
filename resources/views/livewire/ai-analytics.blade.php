@@ -377,21 +377,21 @@
                 <p class="text-xs text-slate-400 mt-0.5">Automated AI risk synthesis and disaster management directives for Bedadung Stream</p>
             </div>
 
+            @if($execReport)
             <div class="flex items-center gap-2">
-                @if($execReport)
                 <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md">
                     <span class="material-symbols-outlined text-sm">download</span>
                     Download PDF / Print Report
                 </button>
-                @endif
 
                 <button wire:click="generateReport" wire:loading.attr="disabled"
-                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-violet-900/30 disabled:opacity-50">
-                    <span wire:loading.remove wire:target="generateReport" class="material-symbols-outlined text-base">auto_awesome</span>
-                    <span wire:loading wire:target="generateReport" class="animate-spin material-symbols-outlined text-base">sync</span>
-                    <span>{{ $execReport ? 'Regenerate Report' : 'Generate AI Report' }}</span>
+                        class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50">
+                    <span wire:loading.remove wire:target="generateReport" class="material-symbols-outlined text-sm">auto_awesome</span>
+                    <span wire:loading wire:target="generateReport" class="animate-spin material-symbols-outlined text-sm">sync</span>
+                    <span>Regenerate Report</span>
                 </button>
             </div>
+            @endif
         </div>
 
         @if($execReport)
