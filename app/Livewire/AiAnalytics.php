@@ -29,6 +29,18 @@ class AiAnalytics extends Component
     public array $hourly24Readings = [];
     public array $tableReadings = [];
 
+    public ?array $execReport = null;
+    public bool $isGeneratingReport = false;
+
+    public function generateReport(\App\Services\OllamaService $ollama): void
+    {
+        $this->isGeneratingReport = true;
+        if ($this->node) {
+            $this->execReport = $ollama->generateExecutiveReport($this->node);
+        }
+        $this->isGeneratingReport = false;
+    }
+
     public function mount(): void
     {
         $this->loadData();
