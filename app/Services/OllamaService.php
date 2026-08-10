@@ -230,7 +230,7 @@ PROMPT;
         $totalReadings = $readings24h->count();
 
         if ($totalReadings > 0) {
-            $waterLevels = $readings24h->map(fn($r) => 200 - (float)$r->distance_cm);
+            $waterLevels   = $readings24h->map(fn($r) => 200 - (float)$r->distance_cm);
             $maxWaterLevel = round($waterLevels->max(), 1);
             $minWaterLevel = round($waterLevels->min(), 1);
             $avgWaterLevel = round($waterLevels->avg(), 1);
@@ -238,17 +238,17 @@ PROMPT;
             $avgTemp       = round($readings24h->avg('temperature_c') ?? 27.5, 1);
             $dangerCount   = $readings24h->where('status', 'danger')->count();
             $cautionCount  = $readings24h->where('status', 'caution')->count();
+            $overallRisk   = $dangerCount > 0 ? 'CRITICAL / DANGER' : ($cautionCount > 5 ? 'ELEVATED / WARNING' : 'STABLE / NORMAL');
         } else {
-            $maxWaterLevel = 165.0;
-            $minWaterLevel = 150.0;
-            $avgWaterLevel = 158.0;
-            $avgHumidity   = 78.0;
-            $avgTemp       = 27.5;
+            $maxWaterLevel = 0.0;
+            $minWaterLevel = 0.0;
+            $avgWaterLevel = 0.0;
+            $avgHumidity   = 0.0;
+            $avgTemp       = 0.0;
             $dangerCount   = 0;
             $cautionCount  = 0;
+            $overallRisk   = 'AWAITING DATA';
         }
-
-        $overallRisk = $dangerCount > 0 ? 'CRITICAL / DANGER' : ($cautionCount > 5 ? 'ELEVATED / WARNING' : 'STABLE / NORMAL');
 
         $prompt = <<<PROMPT
 Generate an official 24-Hour Hydrological & Flood Risk Executive Report:
@@ -329,15 +329,24 @@ PROMPT;
 
         $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
 
-        // Fallback report in 100% English
+        $summaryText = $totalReadings > 0
+            ? "Over the past 24 hours, the Bedadung River telemetry station recorded {$totalReadings} telemetry logs with an overall status of {$overallRisk}. Peak water level reached {$maxWaterLevel} cm with an average atmospheric humidity of {$avgHumidity}%."
+            : "No telemetry readings have been recorded in the past 24 hours. The system is awaiting active sensor data streams from the Bedadung River telemetry station.";
+
+        $findingsList = $totalReadings > 0 ? [
+            "Maximum recorded water level reached {$maxWaterLevel} cm, remaining within safe capacity thresholds.",
+            "Relative atmospheric humidity averaged {$avgHumidity}%, indicating moisture levels across the Bedadung catchment area.",
+            "Continuous IoT telemetry stream recorded {$totalReadings} data points with high hardware operational stability.",
+        ] : [
+            "No telemetry logs recorded in SQLite database over the past 24-hour observation window.",
+            "Atmospheric metrics (humidity & temperature) awaiting payload from Wemos D1 Mini / Arduino sensor node.",
+            "River status unconfirmed. Connect hardware node or run simulation command to populate telemetry logs.",
+        ];
+
         return [
             'title'               => '24-Hour Hydrological & Flood Risk Executive Report',
-            'summary'             => "Over the past 24 hours, the Bedadung River telemetry station maintained a {$overallRisk} status. Peak water level reached {$maxWaterLevel} cm with an average atmospheric humidity of {$avgHumidity}%. Riverbank residents and local authorities are advised to stay informed while routine monitoring continues.",
-            'key_findings'        => [
-                "Maximum recorded water level reached {$maxWaterLevel} cm, remaining within safe capacity thresholds.",
-                "Relative atmospheric humidity averaged {$avgHumidity}%, indicating moderate moisture levels across the Bedadung catchment area.",
-                "Continuous IoT telemetry stream recorded {$totalReadings} data points with high hardware operational stability.",
-            ],
+            'summary'             => $summaryText,
+            'key_findings'        => $findingsList,
             'disaster_directives' => [
                 'Riverbank Advisory: Remain vigilant during night hours and avoid riverbank activities during heavy rainfall.',
                 'Personal Preparedness: Secure essential documents and electronic devices on elevated storage.',
