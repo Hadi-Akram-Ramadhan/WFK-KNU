@@ -35,6 +35,9 @@ class AiAnalytics extends Component
     public function generateReport(\App\Services\OllamaService $ollama): void
     {
         $this->isGeneratingReport = true;
+        if (!$this->node) {
+            $this->loadData();
+        }
         if ($this->node) {
             $this->execReport = $ollama->generateExecutiveReport($this->node);
         }

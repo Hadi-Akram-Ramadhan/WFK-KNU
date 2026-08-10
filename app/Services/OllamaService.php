@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\SensorNode;
+use App\Models\SensorReading;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -29,6 +31,11 @@ class OllamaService
         string $trigger = 'danger_threshold'
     ): array {
         $startTime = microtime(true);
+
+        if (!$this->isAvailable()) {
+            $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
+            return $this->fallbackResponse($readings, $responseTimeMs);
+        }
 
         $prompt = $this->buildFloodPrompt($readings, $nodeId, $nodeName, $trigger);
 
@@ -274,48 +281,50 @@ IMPORTANT: Write the response in clear, professional, easy-to-read English in st
 }
 PROMPT;
 
-        try {
-            $response = Http::timeout(15)
-                ->post("{$this->baseUrl}/api/chat", [
-                    'model'   => $this->model,
-                    'stream'  => false,
-                    'options' => ['num_predict' => 350, 'temperature' => 0.1],
-                    'messages' => [
-                        ['role' => 'system', 'content' => 'You are an expert hydrological analyst for Bedadung SFEWS. Respond ONLY in clear, concise English using strict valid JSON.'],
-                        ['role' => 'user',   'content' => $prompt],
-                    ],
-                ]);
+        if ($this->isAvailable()) {
+            try {
+                $response = Http::timeout(6)
+                    ->post("{$this->baseUrl}/api/chat", [
+                        'model'   => $this->model,
+                        'stream'  => false,
+                        'options' => ['num_predict' => 350, 'temperature' => 0.1],
+                        'messages' => [
+                            ['role' => 'system', 'content' => 'You are an expert hydrological analyst for Bedadung SFEWS. Respond ONLY in clear, concise English using strict valid JSON.'],
+                            ['role' => 'user',   'content' => $prompt],
+                        ],
+                    ]);
 
-            $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
+                $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
 
-            if ($response->successful()) {
-                $content = $response->json('message.content', '');
-                preg_match('/\{.*\}/s', $content, $matches);
-                $jsonStr = $matches[0] ?? '{}';
-                $parsed  = json_decode($jsonStr, true);
+                if ($response->successful()) {
+                    $content = $response->json('message.content', '');
+                    preg_match('/\{.*\}/s', $content, $matches);
+                    $jsonStr = $matches[0] ?? '{}';
+                    $parsed  = json_decode($jsonStr, true);
 
-                if ($parsed && isset($parsed['summary'])) {
-                    return [
-                        'title'               => $parsed['title'] ?? '24-Hour Hydrological & Flood Risk Executive Report',
-                        'summary'             => $parsed['summary'],
-                        'key_findings'        => $parsed['key_findings'] ?? [],
-                        'disaster_directives' => $parsed['disaster_directives'] ?? [],
-                        'max_water_level'     => $maxWaterLevel,
-                        'min_water_level'     => $minWaterLevel,
-                        'avg_water_level'     => $avgWaterLevel,
-                        'avg_humidity'        => $avgHumidity,
-                        'avg_temp'            => $avgTemp,
-                        'danger_count'        => $dangerCount,
-                        'caution_count'       => $cautionCount,
-                        'overall_risk'        => $overallRisk,
-                        'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d M Y - H:i') . ' UTC+7',
-                        'model_used'          => $this->model,
-                        'response_time_ms'    => $responseTimeMs,
-                    ];
+                    if ($parsed && isset($parsed['summary'])) {
+                        return [
+                            'title'               => $parsed['title'] ?? '24-Hour Hydrological & Flood Risk Executive Report',
+                            'summary'             => $parsed['summary'],
+                            'key_findings'        => $parsed['key_findings'] ?? [],
+                            'disaster_directives' => $parsed['disaster_directives'] ?? [],
+                            'max_water_level'     => $maxWaterLevel,
+                            'min_water_level'     => $minWaterLevel,
+                            'avg_water_level'     => $avgWaterLevel,
+                            'avg_humidity'        => $avgHumidity,
+                            'avg_temp'            => $avgTemp,
+                            'danger_count'        => $dangerCount,
+                            'caution_count'       => $cautionCount,
+                            'overall_risk'        => $overallRisk,
+                            'generated_at'        => now()->setTimezone('Asia/Jakarta')->format('d M Y - H:i') . ' UTC+7',
+                            'model_used'          => $this->model,
+                            'response_time_ms'    => $responseTimeMs,
+                        ];
+                    }
                 }
+            } catch (\Exception $e) {
+                Log::warning('[Ollama] Executive Report Fallback: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            Log::warning('[Ollama] Executive Report Fallback: ' . $e->getMessage());
         }
 
         $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
@@ -352,7 +361,8 @@ PROMPT;
     public function isAvailable(): bool
     {
         try {
-            $response = Http::timeout(4)->get("{$this->baseUrl}/api/tags");
+            $url = str_replace('localhost', '127.0.0.1', $this->baseUrl);
+            $response = Http::timeout(1)->connectTimeout(1)->get("{$url}/api/tags");
             return $response->successful();
         } catch (\Exception) {
             return false;
