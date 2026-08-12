@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Command Dashboard') — Bedadung SFEWS</title>
 
+    {{-- Favicon & Tab Icons --}}
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon.png') }}">
+
     {{-- Primary SEO Meta Tags --}}
     <meta name="title" content="Bedadung SFEWS — Smart Flood & Rain Monitoring System">
     <meta name="description" content="Real-time IoT early warning and AI-powered flood risk analytics for the Bedadung River stream, Jember. Continuous water level, rainfall, and weather monitoring.">
@@ -144,9 +150,9 @@
         <div class="space-y-8">
             {{-- Brand Header --}}
             <div class="flex items-center gap-3 px-2 pt-2">
-                <div class="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-inner">
-                    <span class="material-symbols-outlined text-2xl ms-fill">cloud_download</span>
-                </div>
+                <img src="{{ asset('images/logo.svg') }}"
+                     alt="Bedadung SFEWS Logo"
+                     class="w-11 h-11 rounded-2xl object-contain shadow-md border border-slate-700/60 bg-slate-900 p-1">
                 <div>
                     <h1 class="font-extrabold text-xl tracking-tight text-white leading-none">BEDADUNG SFEWS</h1>
                     <span class="text-[11px] font-semibold text-slate-400 tracking-wider block mt-1 uppercase">Flood Monitoring</span>

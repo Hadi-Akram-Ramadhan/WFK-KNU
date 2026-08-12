@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+    <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0f172a"/>
+            <stop offset="100%" stop-color="#0b132b"/>
+        </linearGradient>
+        <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+        </linearGradient>
+        <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#818cf8"/>
+        </linearGradient>
+    </defs>
+    <!-- Base Squircle -->
+    <rect width="128" height="128" rx="36" fill="url(#bgGrad)"/>
+    <rect width="126" height="126" x="1" y="1" rx="35" fill="none" stroke="#1e293b" stroke-width="2"/>
+
+    <!-- Wave 1 (Upper) -->
+    <path d="M 28 52 C 40 40, 56 64, 72 52 C 84 42, 92 46, 100 52" 
+          stroke="url(#waveGrad)" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Wave 2 (Lower) -->
+    <path d="M 28 76 C 40 64, 56 88, 72 76 C 84 66, 92 70, 100 76" 
+          stroke="url(#pulseGrad)" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.85"/>
+
+    <!-- Live Telemetry Signal Dot -->
+    <circle cx="96" cy="36" r="6" fill="#38bdf8"/>
+    <circle cx="96" cy="36" r="10" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.5"/>
+</svg>
