@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6" wire:poll.1s>
+<div class="flex flex-col gap-6" wire:poll.5s>
 
     @php
         $hasReading = $hasData ?? false;
@@ -72,9 +72,9 @@
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     {{-- SECTION 1: HERO HEADER STATION STATUS                          --}}
     {{-- ═══════════════════════════════════════════════════════════════ --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
 
-        <div class="rainova-card lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-white">
+        <div class="rainova-card md:col-span-1 lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-white">
             <div class="flex justify-between items-start">
                 <div>
                     <span class="text-[11px] font-extrabold text-sky-600 uppercase tracking-widest block mb-2">
@@ -102,7 +102,7 @@
         </div>
 
         {{-- Realtime readings compact --}}
-        <div class="rainova-card lg:col-span-5 p-6 flex flex-col justify-between">
+        <div class="rainova-card md:col-span-1 lg:col-span-5 p-6 flex flex-col justify-between">
             <div class="pb-3 border-b border-slate-100">
                 <h2 class="text-sm font-bold text-slate-900 tracking-tight">Live Telemetry</h2>
                 <span class="text-[11px] text-slate-400 font-medium">Real-time sensor metrics</span>
@@ -150,14 +150,14 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
             {{-- ── CARD 1: Flood Probability Gauge ── --}}
             <div class="rainova-card p-6 flex flex-col items-center text-center">
                 <span class="text-[11px] font-bold text-violet-600 uppercase tracking-widest mb-4">Flood Probability</span>
 
                 {{-- SVG Gauge --}}
-                <div class="relative w-44 h-28 mx-auto">
+                <div class="relative w-full max-w-[11rem] h-28 mx-auto">
                     <svg viewBox="0 0 180 110" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                         <!-- Background arc -->
                         <path d="M 20,100 A 70,70 0 0,1 160,100" fill="none" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round"/>
@@ -215,7 +215,7 @@
             <div class="rainova-card p-6 flex flex-col items-center text-center">
                 <span class="text-[11px] font-bold text-violet-600 uppercase tracking-widest mb-4">Humidity Analysis</span>
 
-                <div class="relative w-44 h-28 mx-auto">
+                <div class="relative w-full max-w-[11rem] h-28 mx-auto">
                     <svg viewBox="0 0 180 110" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                         <path d="M 20,100 A 70,70 0 0,1 160,100" fill="none" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round"/>
                         @php
@@ -287,7 +287,7 @@
             </div>
 
             {{-- ── CARD 3: AI Risk Assessment & Actions ── --}}
-            <div class="rainova-card p-6 flex flex-col">
+            <div class="rainova-card p-6 flex flex-col sm:col-span-2 lg:col-span-1">
                 <span class="text-[11px] font-bold text-violet-600 uppercase tracking-widest mb-4">AI Risk Assessment</span>
 
                 <!-- Risk Level Badge -->
