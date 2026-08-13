@@ -271,39 +271,39 @@
         </main>
     </div>
 
-    {{-- ── 3. MOBILE BOTTOM NAVIGATION ── --}}
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-800 shadow-2xl rounded-t-2xl pb-safe"
-         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);">
+    {{-- ── 3. MOBILE BOTTOM NAVIGATION (FLOATING PILL DOCK) ── --}}
+    <nav class="md:hidden fixed bottom-3 inset-x-3 z-50 max-w-md mx-auto bg-slate-900/95 backdrop-blur-lg border border-slate-800 shadow-2xl rounded-2xl"
+         style="padding-bottom: max(env(safe-area-inset-bottom, 0px), 4px);">
         <div class="grid grid-cols-4 w-full">
             {{-- Dashboard --}}
             <a href="{{ route('dashboard') }}"
-               class="flex flex-col items-center justify-center py-3 px-1 transition-all
-                      {{ request()->routeIs('dashboard') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
-                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('dashboard') ? 'ms-fill' : '' }}">space_dashboard</span>
+               class="flex flex-col items-center justify-center py-2.5 px-1 transition-all
+                      {{ request()->routeIs('dashboard') ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                <span class="material-symbols-outlined text-[20px] {{ request()->routeIs('dashboard') ? 'ms-fill' : '' }}">space_dashboard</span>
                 <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Dashboard</span>
             </a>
             {{-- Analytics --}}
             <a href="{{ route('analytics') }}"
-               class="flex flex-col items-center justify-center py-3 px-1 transition-all
-                      {{ request()->routeIs('analytics') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
-                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('analytics') ? 'ms-fill' : '' }}">query_stats</span>
+               class="flex flex-col items-center justify-center py-2.5 px-1 transition-all
+                      {{ request()->routeIs('analytics') ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                <span class="material-symbols-outlined text-[20px] {{ request()->routeIs('analytics') ? 'ms-fill' : '' }}">query_stats</span>
                 <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Analytics</span>
             </a>
             {{-- Map --}}
             <a href="{{ route('map') }}"
-               class="flex flex-col items-center justify-center py-3 px-1 transition-all
-                      {{ request()->routeIs('map') ? 'text-sky-400' : 'text-slate-500 active:text-white' }}">
-                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('map') ? 'ms-fill' : '' }}">location_on</span>
+               class="flex flex-col items-center justify-center py-2.5 px-1 transition-all
+                      {{ request()->routeIs('map') ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                <span class="material-symbols-outlined text-[20px] {{ request()->routeIs('map') ? 'ms-fill' : '' }}">location_on</span>
                 <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Map</span>
             </a>
             {{-- Alerts --}}
             <a href="{{ route('alerts') }}"
-               class="flex flex-col items-center justify-center py-3 px-1 transition-all relative
-                      {{ request()->routeIs('alerts') ? 'text-rose-400' : 'text-slate-500 active:text-white' }}">
-                <span class="material-symbols-outlined text-[22px] {{ request()->routeIs('alerts') ? 'ms-fill' : '' }}">notifications_active</span>
+               class="flex flex-col items-center justify-center py-2.5 px-1 transition-all relative
+                      {{ request()->routeIs('alerts') ? 'text-rose-400 font-bold' : 'text-slate-400 hover:text-white' }}">
+                <span class="material-symbols-outlined text-[20px] {{ request()->routeIs('alerts') ? 'ms-fill' : '' }}">notifications_active</span>
                 <span class="text-[9px] font-semibold mt-0.5 truncate w-full text-center">Alerts</span>
                 @if($globalAlertCount > 0)
-                    <span class="absolute top-2 right-3 w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                    <span class="absolute top-1.5 right-3 w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-bold flex items-center justify-center leading-none shadow-xs">
                         {{ $globalAlertCount > 9 ? '9+' : $globalAlertCount }}
                     </span>
                 @endif
