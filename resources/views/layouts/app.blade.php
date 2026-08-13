@@ -229,7 +229,7 @@
     </aside>
 
     {{-- ── 2. MAIN CANVAS (RIGHT SIDE) ── --}}
-    <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
+    <div class="flex-1 flex flex-col min-w-0 pb-20 md:pb-8 max-w-full overflow-x-hidden">
 
         {{-- Top Bar Header --}}
         <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200 px-5 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-40 shadow-xs">

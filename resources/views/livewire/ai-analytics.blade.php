@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6" wire:poll.5s>
+<div class="flex flex-col gap-6 w-full max-w-full overflow-x-hidden" wire:poll.5s>
 
     @php
         $hasReading = $hasData ?? false;
@@ -380,14 +380,14 @@
             </div>
 
             @if($execReport)
-            <div class="flex items-center gap-2">
-                <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <button onclick="window.print()" class="w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md">
                     <span class="material-symbols-outlined text-sm">download</span>
                     Download PDF / Print Report
                 </button>
 
                 <button wire:click="generateReport" wire:loading.attr="disabled"
-                        class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50">
+                        class="w-full sm:w-auto justify-center px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50">
                     <span wire:loading.remove wire:target="generateReport" class="material-symbols-outlined text-sm">auto_awesome</span>
                     <span wire:loading wire:target="generateReport" class="animate-spin material-symbols-outlined text-sm">sync</span>
                     <span>Regenerate Report</span>
