@@ -74,30 +74,30 @@
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
 
-        <div class="rainova-card md:col-span-1 lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-white">
-            <div class="flex justify-between items-start">
+        <div class="rainova-card md:col-span-1 lg:col-span-7 p-5 sm:p-7 flex flex-col justify-between relative overflow-hidden bg-white">
+            <div class="flex justify-between items-start gap-4">
                 <div>
-                    <span class="text-[11px] font-extrabold text-sky-600 uppercase tracking-widest block mb-2">
+                    <span class="text-[10px] sm:text-[11px] font-extrabold text-sky-600 uppercase tracking-widest block mb-1.5">
                         PRIMARY MONITORING STATION
                     </span>
-                    <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    <h1 class="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
                         Bedadung River — Baratan
                     </h1>
-                    <p class="text-slate-500 text-xs sm:text-sm font-medium mt-2 leading-relaxed">
+                    <p class="text-slate-500 text-xs sm:text-sm font-medium mt-1.5 leading-relaxed">
                         {{ $hasReading ? 'Live sensor telemetry active — AI flood prediction running continuously.' : 'Awaiting Wemos D1 Mini hardware connection to start live telemetry.' }}
                     </p>
                 </div>
-                <span class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border {{ $statusPillStyle }}">
+                <span class="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider border shrink-0 {{ $statusPillStyle }}">
                     {{ $statusTitle }}
                 </span>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full {{ $hasReading ? 'bg-emerald-500 pulse-live' : 'bg-slate-400' }}"></span>
-                    Sensor 01 — Jl. Gajah Mada, Sumbersari, Jember
+            <div class="mt-4 sm:mt-6 pt-3.5 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500">
+                <span class="flex items-center gap-2 min-w-0">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $hasReading ? 'bg-emerald-500 pulse-live' : 'bg-slate-400' }}"></span>
+                    <span class="font-medium text-slate-600 truncate sm:whitespace-normal">Sensor 01 — Jl. Gajah Mada, Sumbersari, Jember</span>
                 </span>
-                <span class="font-mono text-slate-400">ID: BEDADUNG_01</span>
+                <span class="font-mono text-slate-400 text-[11px] sm:text-xs pl-4 sm:pl-0">ID: BEDADUNG_01</span>
             </div>
         </div>
 
