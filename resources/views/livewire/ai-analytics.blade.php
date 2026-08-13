@@ -92,12 +92,14 @@
                 </span>
             </div>
 
-            <div class="mt-4 sm:mt-6 pt-3.5 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-slate-500">
-                <span class="flex items-center gap-2 min-w-0">
-                    <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $hasReading ? 'bg-emerald-500 pulse-live' : 'bg-slate-400' }}"></span>
-                    <span class="font-medium text-slate-600 truncate sm:whitespace-normal">Sensor 01 — Jl. Gajah Mada, Sumbersari, Jember</span>
-                </span>
-                <span class="font-mono text-slate-400 text-[11px] sm:text-xs pl-4 sm:pl-0">ID: BEDADUNG_01</span>
+            <div class="mt-4 sm:mt-6 pt-3.5 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div class="flex items-start sm:items-center gap-2 text-slate-600">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0 mt-1 sm:mt-0 {{ $hasReading ? 'bg-emerald-500 pulse-live' : 'bg-slate-400' }}"></span>
+                    <span class="font-medium leading-tight">Sensor 01 — Jl. Gajah Mada, Sumbersari, Jember</span>
+                </div>
+                <div class="font-mono text-slate-400 text-[11px] shrink-0 pl-4 sm:pl-0">
+                    ID: BEDADUNG_01
+                </div>
             </div>
         </div>
 
