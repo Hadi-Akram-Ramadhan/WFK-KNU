@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\Route;
 | API Routes — Bedadung SFEWS
 |--------------------------------------------------------------------------
 |
-| GET  /api/sensor/data        → Check API status
-| POST /api/sensor/data        → Ingest data from Wemos D1 Mini
-| GET  /api/sensor/nodes       → List nodes & latest status
+| GET  /api/sensor/data              → Check API status
+| POST /api/sensor/data              → Ingest data from Wemos D1 Mini
+| GET  /api/sensor/nodes             → List nodes & latest status
+| GET  /api/status/live              → Lightweight live status JSON (< 5ms)
 | GET  /api/hardware/commands/{nodeId} → Pending commands for Wemos
-| POST /api/hardware/command   → Send command from dashboard
-| GET  /api/hardware/logs/{nodeId}     → Hardware command logs
+| POST /api/hardware/command         → Send command from dashboard
+| GET  /api/hardware/logs/{nodeId}   → Hardware command logs
 |
 */
 
@@ -24,8 +25,12 @@ Route::prefix('sensor')->group(function () {
     Route::get('/nodes',  [SensorDataController::class, 'nodes']);
 });
 
+// Instant lightweight status endpoint — used by dashboard JS fetch
+Route::get('/status/live', [SensorDataController::class, 'liveStatus']);
+
 Route::prefix('hardware')->group(function () {
     Route::get('/commands/{nodeId}',  [HardwareController::class, 'getPendingCommands']);
     Route::post('/command',           [HardwareController::class, 'sendCommand']);
     Route::get('/logs/{nodeId}',      [HardwareController::class, 'getLogs']);
 });
+

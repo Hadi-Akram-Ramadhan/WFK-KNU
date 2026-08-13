@@ -1,6 +1,6 @@
 @section('header_title', 'Command Dashboard')
 
-<div class="flex flex-col gap-6" wire:poll.1s>
+<div class="flex flex-col gap-6" wire:poll.5s>
 
     @php
         $hasData = !is_null($latestReading);
@@ -25,7 +25,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {{-- Left: Hero Alert Banner (8 Cols) --}}
-        <div class="lg:col-span-8 bg-gradient-to-r {{ $bannerGradient }} rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[280px]">
+        <div id="hero-banner"
+             class="lg:col-span-8 bg-gradient-to-r {{ $bannerGradient }} rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg flex flex-col justify-between min-h-[280px]"
+             data-status="{{ $latestReading?->status ?? 'offline' }}">
             {{-- Waterdrop Illustration Background --}}
             <div class="absolute -right-6 -bottom-8 opacity-25 pointer-events-none">
                 <span class="material-symbols-outlined text-[200px] ms-fill">water_drop</span>
@@ -39,10 +41,10 @@
                 </div>
 
                 {{-- Huge Status Title --}}
-                <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-none text-white drop-shadow-sm">
+                <h1 id="hero-status-title" class="text-4xl sm:text-6xl font-black tracking-tight leading-none text-white drop-shadow-sm">
                     {{ $statusTitle }}
                 </h1>
-                <p class="text-white/90 text-sm sm:text-base font-medium mt-3 max-w-lg leading-relaxed">
+                <p id="hero-status-desc" class="text-white/90 text-sm sm:text-base font-medium mt-3 max-w-lg leading-relaxed">
                     {{ $statusDesc }}
                 </p>
             </div>
@@ -51,13 +53,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-white/20 z-10">
                 <div class="px-4 py-2.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
                     <span class="text-[11px] text-white/70 font-medium block">Water Level</span>
-                    <span class="font-mono text-base font-bold text-white mt-0.5 block">
+                    <span id="hero-water-level" class="font-mono text-base font-bold text-white mt-0.5 block">
                         {{ !is_null($waterLevelCm) ? number_format($waterLevelCm, 1) . ' cm' : '--' }}
                     </span>
                 </div>
                 <div class="px-4 py-2.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
                     <span class="text-[11px] text-white/70 font-medium block">Rain Status</span>
-                    <span class="font-mono text-base font-bold text-white mt-0.5 block">{{ $rainStatus }}</span>
+                    <span id="hero-rain" class="font-mono text-base font-bold text-white mt-0.5 block">{{ $rainStatus }}</span>
                 </div>
                 <div class="px-4 py-2.5 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
                     <span class="text-[11px] text-white/70 font-medium block">Monitoring Area</span>
@@ -305,3 +307,72 @@
     </div>
 
 </div>
+
+{{-- ── INSTANT STATUS FETCH — polls /api/status/live every 500ms ── --}}
+<script>
+(function() {
+    const GRADIENTS = {
+        danger:  'from-rose-600 via-rose-500 to-red-600',
+        caution: 'from-amber-600 via-orange-500 to-amber-500',
+        safe:    'from-emerald-600 via-teal-500 to-emerald-500',
+        offline: 'from-slate-700 via-slate-800 to-slate-900',
+    };
+    const TITLES = {
+        danger:  'DANGER',
+        caution: 'STANDBY',
+        safe:    'SAFE',
+        offline: 'OFFLINE',
+    };
+    const DESCS = {
+        danger:  'Critical water level! Immediate evacuation advised along Bedadung stream.',
+        caution: 'Water level is elevated, continuous monitoring recommended.',
+        safe:    'Water level is normal, smooth river flow.',
+        offline: 'Hardware power disconnected. Connect Wemos D1 Mini to resume live telemetry.',
+    };
+
+    let lastStatus = '{{ $latestReading?->status ?? "offline" }}';
+    let lastTs     = null;
+
+    async function fetchLiveStatus() {
+        try {
+            const res  = await fetch('/api/status/live', { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const status = data.online ? (data.status || 'offline') : 'offline';
+
+            // Only update DOM if something actually changed
+            if (status === lastStatus && data.ts === lastTs) return;
+            lastStatus = status;
+            lastTs     = data.ts;
+
+            const banner = document.getElementById('hero-banner');
+            const title  = document.getElementById('hero-status-title');
+            const desc   = document.getElementById('hero-status-desc');
+            const water  = document.getElementById('hero-water-level');
+            const rain   = document.getElementById('hero-rain');
+
+            if (!banner || !title) return;
+
+            // Swap gradient classes
+            const allGrads = Object.values(GRADIENTS).join(' ').split(' ');
+            banner.classList.remove(...allGrads);
+            const newGrad = (GRADIENTS[status] || GRADIENTS.offline).split(' ');
+            banner.classList.add(...newGrad);
+            banner.dataset.status = status;
+
+            title.textContent = TITLES[status] || 'OFFLINE';
+            if (desc) desc.textContent = DESCS[status] || '';
+            if (water) water.textContent = data.water_level !== null ? data.water_level.toFixed(1) + ' cm' : '--';
+            if (rain)  rain.textContent  = data.rain || '--';
+
+        } catch (e) {
+            // Silently ignore network errors
+        }
+    }
+
+    // Start polling immediately
+    fetchLiveStatus();
+    setInterval(fetchLiveStatus, 500);
+})();
+</script>

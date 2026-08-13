@@ -30,6 +30,43 @@ class SensorDataController extends Controller
     }
 
     /**
+     * GET /api/status/live
+     *
+     * Ultra-lightweight endpoint for instant dashboard status polling.
+     * Single DB query, no Livewire overhead — returns in < 10ms.
+     * Used by vanilla JS setInterval on the dashboard hero banner.
+     */
+    public function liveStatus(): JsonResponse
+    {
+        $node = \App\Models\SensorNode::with('latestReading')->first();
+
+        if (!$node || !$node->latestReading) {
+            return response()->json([
+                'online'      => false,
+                'status'      => 'offline',
+                'water_level' => null,
+                'rain'        => 'NO DATA',
+                'temp'        => null,
+                'humidity'    => null,
+                'ts'          => null,
+            ])->header('Cache-Control', 'no-store');
+        }
+
+        $r      = $node->latestReading;
+        $isLive = $r->created_at->diffInSeconds(now()) <= 20;
+
+        return response()->json([
+            'online'      => $isLive,
+            'status'      => $isLive ? $r->status : 'offline',
+            'water_level' => $isLive ? round(200 - (float) $r->distance_cm, 1) : null,
+            'rain'        => $isLive ? ((float) ($r->humidity_percent ?? 0) > 85 ? 'RAINY' : 'CLEAR') : 'OFFLINE',
+            'temp'        => $isLive ? (float) ($r->temperature_c ?? 0) : null,
+            'humidity'    => $isLive ? (float) ($r->humidity_percent ?? 0) : null,
+            'ts'          => $r->created_at->timestamp,
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /**
      * POST /api/sensor/data
      *
      * Ingest sensor readings from Wemos D1 Mini / ESP8266.
