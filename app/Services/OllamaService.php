@@ -41,12 +41,15 @@ class OllamaService
 
         try {
             $response = Http::timeout($this->timeout)
+                ->connectTimeout(5)
+                ->retry(2, 100)
                 ->post("{$this->baseUrl}/api/chat", [
                     'model'  => $this->model,
                     'stream' => false,
                     'options' => [
                         'num_predict' => 250,
                         'temperature' => 0.1,
+                        'num_ctx' => 2048,
                     ],
                     'messages' => [
                         ['role' => 'system', 'content' => $this->systemPrompt()],
@@ -148,8 +151,8 @@ PROMPT;
         // Fallback calculation for flood probability if missing
         $calculatedProbability = (int)($parsed['flood_probability_percent'] ?? $this->calculateProbabilityFallback($dist, $hum));
 
-        $cleanSummary = isset($parsed['summary'])
-            ? trim(preg_replace('/[\*\#]/', '', $parsed['summary']))
+        $cleanSummary = isset($parsed['ai_response'])
+            ? trim(preg_replace('/[\*\#]/', '', $parsed['ai_response']))
             : 'Sungai Bedadung menunjukkan peningkatan debit air. Warga disarankan siaga dan mengamankan barang berharga.';
 
         $cleanWeather = isset($parsed['weather_condition'])

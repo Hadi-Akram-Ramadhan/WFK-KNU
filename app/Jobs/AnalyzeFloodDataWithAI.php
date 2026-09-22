@@ -43,6 +43,17 @@ class AnalyzeFloodDataWithAI implements ShouldQueue
             return;
         }
 
+        // Throttle: check if recent analysis exists (within 2 minutes)
+        $recentAnalysis = $node->analyses()
+            ->where('created_at', '>=', now()->subMinutes(2))
+            ->where('trigger', $this->trigger)
+            ->exists();
+
+        if ($recentAnalysis && $this->trigger !== 'manual') {
+            Log::info("[AIJob] Skipping duplicate analysis for node {$node->node_id} (throttled)");
+            return;
+        }
+
         Log::info("[AIJob] Starting AI analysis for node {$node->node_id}, trigger: {$this->trigger}");
 
         // Gather last 30 minutes of readings for context

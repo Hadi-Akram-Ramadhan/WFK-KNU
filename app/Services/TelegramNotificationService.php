@@ -8,14 +8,15 @@ use Illuminate\Support\Facades\Log;
 class TelegramNotificationService
 {
     private string $botToken;
-    private string $chatId;
+    private array $chatIds;
     private string $baseUrl;
 
     public function __construct()
     {
         $this->botToken = config('services.telegram.bot_token', '');
-        $this->chatId   = config('services.telegram.chat_id', '');
-        $this->baseUrl  = "https://api.telegram.org/bot{$this->botToken}";
+        $chatIdStr = config('services.telegram.chat_id', '');
+        $this->chatIds = array_filter(array_map('trim', explode(',', $chatIdStr)));
+        $this->baseUrl = "https://api.telegram.org/bot{$this->botToken}";
     }
 
     /**
@@ -48,7 +49,7 @@ class TelegramNotificationService
             $msg .= "🤖 *Analisis AI:*\n_{$aiResponse}_\n\n";
         }
 
-        $msg .= "🔗 [Buka Dashboard](https://your-vps-domain.com/dashboard)";
+        $msg .= "🔗 [Buka Dashboard](" . config('app.url') . "/dashboard)";
 
         return $this->sendMessage($msg);
     }
@@ -62,31 +63,35 @@ class TelegramNotificationService
     }
 
     /**
-     * Send raw Markdown message to Telegram.
+     * Send raw Markdown message to all configured chat IDs (broadcast).
      */
     public function sendMessage(string $text): bool
     {
-        if (empty($this->botToken) || empty($this->chatId)) {
+        if (empty($this->botToken) || empty($this->chatIds)) {
             Log::warning('[Telegram] Bot token or Chat ID not configured.');
             return false;
         }
 
-        try {
-            $response = Http::post("{$this->baseUrl}/sendMessage", [
-                'chat_id'    => $this->chatId,
-                'text'       => $text,
-                'parse_mode' => 'Markdown',
-            ]);
+        $success = true;
 
-            if (!$response->successful()) {
-                Log::error('[Telegram] Failed to send', ['response' => $response->body()]);
-                return false;
+        foreach ($this->chatIds as $chatId) {
+            try {
+                $response = Http::timeout(5)->post("{$this->baseUrl}/sendMessage", [
+                    'chat_id'    => $chatId,
+                    'text'       => $text,
+                    'parse_mode' => 'Markdown',
+                ]);
+
+                if (!$response->successful()) {
+                    Log::error('[Telegram] Failed to send to ' . $chatId, ['response' => $response->body()]);
+                    $success = false;
+                }
+            } catch (\Exception $e) {
+                Log::error("[Telegram] Exception for {$chatId}: " . $e->getMessage());
+                $success = false;
             }
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('[Telegram] Exception: ' . $e->getMessage());
-            return false;
         }
+
+        return $success;
     }
 }

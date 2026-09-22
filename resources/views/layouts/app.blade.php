@@ -65,19 +65,40 @@
     </script>
 
     <style>
+        :root {
+            --bg-primary: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
         body {
-            background-color: #f1f5f9;
-            color: #0f172a;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             font-family: 'Poppins', sans-serif;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .rainova-card {
-            background: #ffffff;
+            background: var(--bg-card);
             border-radius: 20px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);
             transition: all 0.2s ease-in-out;
+        }
+
+        [data-theme="dark"] .rainova-card {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
         }
 
         .rainova-sidebar {
@@ -144,6 +165,9 @@
     @livewireStyles
 </head>
 <body class="min-h-screen flex flex-col md:flex-row text-slate-800 antialiased">
+
+    {{-- Toast Notification Container --}}
+    <x-toast />
 
     {{-- ── 1. DARK MIDNIGHT NAVY SIDEBAR (DESKTOP) ── --}}
     <aside class="hidden md:flex md:w-64 lg:w-72 rainova-sidebar min-h-screen flex-col justify-between p-5 text-white flex-shrink-0 z-40 shadow-xl border-r border-slate-800">
@@ -243,6 +267,14 @@
             </div>
 
             <div class="flex items-center gap-3 sm:gap-4">
+                {{-- Dark Mode Toggle --}}
+                <button id="darkModeToggle"
+                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 flex items-center justify-center transition-all"
+                        aria-label="Toggle dark mode">
+                    <span class="material-symbols-outlined text-lg dark-icon hidden">dark_mode</span>
+                    <span class="material-symbols-outlined text-lg light-icon">light_mode</span>
+                </button>
+
                 {{-- Digital Sync Badge --}}
                 <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/80 text-xs font-mono font-semibold text-slate-600">
                     <span class="text-slate-400 text-[10px]">Last Sync:</span>
@@ -312,6 +344,39 @@
     </nav>
 
     <script>
+        // Dark mode toggle
+        (function() {
+            const toggle = document.getElementById('darkModeToggle');
+            const html = document.documentElement;
+            const darkIcon = toggle?.querySelector('.dark-icon');
+            const lightIcon = toggle?.querySelector('.light-icon');
+
+            // Load saved preference
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                html.setAttribute('data-theme', 'dark');
+                darkIcon?.classList.remove('hidden');
+                lightIcon?.classList.add('hidden');
+            }
+
+            toggle?.addEventListener('click', () => {
+                const isDark = html.getAttribute('data-theme') === 'dark';
+                const newTheme = isDark ? 'light' : 'dark';
+
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+
+                if (newTheme === 'dark') {
+                    darkIcon?.classList.remove('hidden');
+                    lightIcon?.classList.add('hidden');
+                } else {
+                    darkIcon?.classList.add('hidden');
+                    lightIcon?.classList.remove('hidden');
+                }
+            });
+        })();
+
+        // Digital clock update
         setInterval(() => {
             const clockEl = document.getElementById('digitalClock');
             if (clockEl) {

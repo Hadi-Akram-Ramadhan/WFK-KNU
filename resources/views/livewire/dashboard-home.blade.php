@@ -1,6 +1,6 @@
 @section('header_title', 'Command Dashboard')
 
-<div class="flex flex-col gap-6" wire:poll.5s>
+<div class="flex flex-col gap-6 w-full max-w-full overflow-x-hidden" wire:poll.15s>
 
     @php
         $hasData = !is_null($latestReading);

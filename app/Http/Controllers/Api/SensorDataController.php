@@ -33,37 +33,40 @@ class SensorDataController extends Controller
      * GET /api/status/live
      *
      * Ultra-lightweight endpoint for instant dashboard status polling.
-     * Single DB query, no Livewire overhead — returns in < 10ms.
-     * Used by vanilla JS setInterval on the dashboard hero banner.
+     * Cached 3s, single query, < 5ms response.
      */
     public function liveStatus(): JsonResponse
     {
-        $node = \App\Models\SensorNode::with('latestReading')->first();
+        $data = \Illuminate\Support\Facades\Cache::remember('live_status', 3, function () {
+            $node = \App\Models\SensorNode::with('latestReading')->first();
 
-        if (!$node || !$node->latestReading) {
-            return response()->json([
-                'online'      => false,
-                'status'      => 'offline',
-                'water_level' => null,
-                'rain'        => 'NO DATA',
-                'temp'        => null,
-                'humidity'    => null,
-                'ts'          => null,
-            ])->header('Cache-Control', 'no-store');
-        }
+            if (!$node || !$node->latestReading) {
+                return [
+                    'online'      => false,
+                    'status'      => 'offline',
+                    'water_level' => null,
+                    'rain'        => 'NO DATA',
+                    'temp'        => null,
+                    'humidity'    => null,
+                    'ts'          => null,
+                ];
+            }
 
-        $r      = $node->latestReading;
-        $isLive = $r->created_at->diffInSeconds(now()) <= 20;
+            $r      = $node->latestReading;
+            $isLive = $r->created_at->diffInSeconds(now()) <= 20;
 
-        return response()->json([
-            'online'      => $isLive,
-            'status'      => $isLive ? $r->status : 'offline',
-            'water_level' => $isLive ? round(200 - (float) $r->distance_cm, 1) : null,
-            'rain'        => $isLive ? ((float) ($r->humidity_percent ?? 0) > 85 ? 'RAINY' : 'CLEAR') : 'OFFLINE',
-            'temp'        => $isLive ? (float) ($r->temperature_c ?? 0) : null,
-            'humidity'    => $isLive ? (float) ($r->humidity_percent ?? 0) : null,
-            'ts'          => $r->created_at->timestamp,
-        ])->header('Cache-Control', 'no-store');
+            return [
+                'online'      => $isLive,
+                'status'      => $isLive ? $r->status : 'offline',
+                'water_level' => $isLive ? round(200 - (float) $r->distance_cm, 1) : null,
+                'rain'        => $isLive ? ((float) ($r->humidity_percent ?? 0) > 85 ? 'RAINY' : 'CLEAR') : 'OFFLINE',
+                'temp'        => $isLive ? (float) ($r->temperature_c ?? 0) : null,
+                'humidity'    => $isLive ? (float) ($r->humidity_percent ?? 0) : null,
+                'ts'          => $r->created_at->timestamp,
+            ];
+        });
+
+        return response()->json($data)->header('Cache-Control', 'max-age=3, public');
     }
 
     /**
